@@ -59,10 +59,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlarmSetter.cs" />
     <Compile Include="AlarmReceiver.cs" />
     <Compile Include="BootReceiver.cs" />
+    <Compile Include="SlackApi\TokenResponse.cs" />
     <Compile Include="SlackApi\Channel.cs" />
-    <Compile Include="Config.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Creds.cs" />
     <Compile Include="InjectView.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="Prefs.cs" />
     <Compile Include="SlackApi\Message.cs" />
     <Compile Include="SlackApi\RtmStartResponse.cs" />
+    <Compile Include="SlackApi\AuthResponse.cs" />
     <Compile Include="SlackApi\User.cs" />
     <Compile Include="SlackApi\UserListResponse.cs" />
     <Compile Include="SlackLoginActivity.cs" />

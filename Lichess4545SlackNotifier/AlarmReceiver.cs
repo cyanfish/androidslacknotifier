@@ -92,7 +92,7 @@ namespace Lichess4545SlackNotifier
         {
             string text = GetLatestText(channel);
             long ts = GetLatestTimestamp(channel);
-            string currentUserName = Config.GetLoggedInUser(context);
+            string currentUserName = new Prefs(context).Auth.User;
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
                     .SetSmallIcon(Resource.Drawable.slack_icon_full)

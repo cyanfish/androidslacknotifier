@@ -9,6 +9,8 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using Lichess4545SlackNotifier.SlackApi;
+using Newtonsoft.Json;
 using Org.Json;
 
 namespace Lichess4545SlackNotifier
@@ -32,10 +34,10 @@ namespace Lichess4545SlackNotifier
             set => Source.Edit().PutLong("interval", value).Commit();
         }
 
-        public JSONObject Auth
+        public AuthResponse Auth
         {
-            get => new JSONObject(Source.GetString("auth", "{\"ok\": false}"));
-            set => Source.Edit().PutString("auth", value?.ToString()).Commit();
+            get => JsonConvert.DeserializeObject<AuthResponse>(Source.GetString("auth", "{}")) ?? new AuthResponse();
+            set => Source.Edit().PutString("auth", JsonConvert.SerializeObject(value)).Commit();
         }
 
         public string Token

@@ -7,6 +7,7 @@ using Android.OS;
 using Android.Webkit;
 using Java.Math;
 using Java.Security;
+using Lichess4545SlackNotifier.SlackApi;
 using Org.Json;
 using Exception = Java.Lang.Exception;
 using Uri = Android.Net.Uri;
@@ -92,11 +93,11 @@ namespace Lichess4545SlackNotifier
                 {
                     string url =
                         $"https://slack.com/api/oauth.access?client_id={Creds.client_id}&client_secret={Creds.client_secret}&code={code}&redirect_uri={Constants.redirect_uri}";
-                    JSONObject tokenResult = await JsonReader.ReadJsonFromUrlAsync(url);
-                    Prefs.Token = tokenResult.GetString("access_token");
+                    var tokenResponse = await JsonReader.ReadJsonFromUrlAsync<TokenResponse>(url);
+                    Prefs.Token = tokenResponse.AccessToken;
 
                     string authUrl = $"https://slack.com/api/auth.test?token={Prefs.Token}";
-                    Prefs.Auth = await JsonReader.ReadJsonFromUrlAsync(authUrl);
+                    Prefs.Auth = await JsonReader.ReadJsonFromUrlAsync<AuthResponse>(authUrl);
 
                     Toast.MakeText(context, "Login succeeded", ToastLength.Short).Show();
                     context.SetResult(Result.Ok);

@@ -21,7 +21,7 @@ namespace Lichess4545SlackNotifier
     {
         static KernelManager()
         {
-            Kernel = new StandardKernel(new Module());
+            Kernel = new StandardKernel(new NinjectSettings { InjectNonPublic = true }, new Module());
         }
 
         public static IKernel Kernel { get; }
@@ -41,7 +41,7 @@ namespace Lichess4545SlackNotifier
             public override void Load()
             {
                 Bind<Context>().ToMethod(GetAndroidContext);
-                var viewTypes = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(View)));
+                var viewTypes = typeof(View).Assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(View)));
                 foreach (var t in viewTypes)
                 {
                     Bind(t).ToMethod(GetAndroidView);
@@ -52,7 +52,7 @@ namespace Lichess4545SlackNotifier
             {
                 if (ctx.Request.Target != null)
                 {
-                    return (Context) ctx.Request.Parameters.Where(x => x.Name == "androidContext").Select(x => x.GetValue(ctx, ctx.Request.Target)).FirstOrDefault();
+                    return (Context)ctx.Request.Parameters.Where(x => x.Name == "androidContext").Select(x => x.GetValue(ctx, ctx.Request.Target)).FirstOrDefault();
                 }
                 return null;
             }

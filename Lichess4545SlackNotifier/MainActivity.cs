@@ -5,9 +5,8 @@ using Android.Content;
 using Android.Widget;
 using Android.OS;
 using Android.Views;
-using Java.Lang;
+using Lichess4545SlackNotifier.SlackApi;
 using Ninject;
-using Org.Json;
 
 namespace Lichess4545SlackNotifier
 {
@@ -17,19 +16,22 @@ namespace Lichess4545SlackNotifier
         private const int LOGIN_REQUEST = 1;
 
         [InjectView(Resource.Id.LoginButton)]
-        private Button LoginButton { get; set; }
+        public Button LoginButton { get; set; }
 
         [InjectView(Resource.Id.LogoutButton)]
-        private Button LogoutButton { get; set; }
+        public Button LogoutButton { get; set; }
 
         [InjectView(Resource.Id.status)]
-        private TextView Status { get; set; }
+        public TextView Status { get; set; }
 
         [InjectView(Resource.Id.IntervalSpinner)]
-        private Spinner IntervalSpinner { get; set; }
+        public Spinner IntervalSpinner { get; set; }
 
         [Inject]
         public Prefs Prefs { get; set; }
+
+        [Inject]
+        public AlarmSetter AlarmSetter { get; set; }
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -38,38 +40,32 @@ namespace Lichess4545SlackNotifier
 
             KernelManager.Inject(this);
             
-            LoginButton = FindViewById<Button>(Resource.Id.LoginButton);
             LoginButton.Click += (sender, args) => StartActivityForResult(new Intent(this, typeof(SlackLoginActivity)), LOGIN_REQUEST);
-
-            LogoutButton = FindViewById<Button>(Resource.Id.LogoutButton);
+            
             LogoutButton.Click += (sender, args) =>
             {
                 Prefs.Auth = null;
                 RefreshDisplay(true);
             };
 
-            Status = FindViewById<TextView>(Resource.Id.status);
-
             string[] intervalChoices = { "Disabled", "Every minute", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
             var intervalValues = new List<long> { 0L, TimeConstants.Minute, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
-            IntervalSpinner = FindViewById<Spinner>(Resource.Id.IntervalSpinner);
             IntervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
             long interval = Prefs.Interval;
             IntervalSpinner.SetSelection(intervalValues.IndexOf(interval));
             IntervalSpinner.ItemSelected += (sender, args) =>
             {
                 long newValue = intervalValues[args.Position];
-                long oldValue = Config.GetAlarmInterval(this);
-                if (newValue != oldValue)
+                if (newValue != Prefs.Interval)
                 {
                     Prefs.Interval = newValue;
-                    Config.SetAlarm(this);
+                    AlarmSetter.SetAlarm();
                 }
             };
 
             RefreshDisplay(true);
             TestAuth();
-            Config.SetAlarm(this);
+            AlarmSetter.SetAlarm();
         }
 
         private async void TestAuth()
@@ -80,8 +76,7 @@ namespace Lichess4545SlackNotifier
                 return;
             }
             string url = $"https://slack.com/api/auth.test?token={token}";
-            JSONObject result = await JsonReader.ReadJsonFromUrlAsync(url);
-            Prefs.Token = result.ToString();
+            Prefs.Auth = await JsonReader.ReadJsonFromUrlAsync<AuthResponse>(url);
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
@@ -91,7 +86,7 @@ namespace Lichess4545SlackNotifier
                 if (resultCode == Result.Ok)
                 {
                     RefreshDisplay(true);
-                    Config.SetAlarm(this);
+                    AlarmSetter.SetAlarm();
                 }
             }
         }
@@ -107,7 +102,7 @@ namespace Lichess4545SlackNotifier
                 return;
             }
 
-            string user = Config.GetLoggedInUser(this);
+            string user = Prefs.Auth.User;
             if (user != null)
             {
                 // Logged in

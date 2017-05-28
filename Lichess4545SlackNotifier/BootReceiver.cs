@@ -19,7 +19,7 @@ namespace Lichess4545SlackNotifier
         public override void OnReceive(Context context, Intent intent)
         {
             Log.Info("slackn", "Boot received");
-            Config.SetAlarm(context);
+            new AlarmSetter(context).SetAlarm();
         }
     }
 }
