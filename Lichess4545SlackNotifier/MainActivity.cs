@@ -68,8 +68,20 @@ namespace Lichess4545SlackNotifier
             };
 
             RefreshDisplay(true);
-            new MainActivity.TestAuthTask(this).Execute();
+            TestAuth();
             Config.SetAlarm(this);
+        }
+
+        private async void TestAuth()
+        {
+            string token = Prefs.Token;
+            if (token == null)
+            {
+                return;
+            }
+            string url = $"https://slack.com/api/auth.test?token={token}";
+            JSONObject result = await JsonReader.ReadJsonFromUrlAsync(url);
+            Prefs.Token = result.ToString();
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
@@ -110,39 +122,6 @@ namespace Lichess4545SlackNotifier
                 LoginButton.Visibility = ViewStates.Visible;
                 LogoutButton.Visibility = ViewStates.Gone;
                 Status.Visibility = ViewStates.Gone;
-            }
-        }
-
-        private class TestAuthTask : AsyncTask<Void, Void, bool>
-        {
-            private readonly Activity context;
-
-            public TestAuthTask(Activity context)
-            {
-                this.context = context;
-                Prefs = new Prefs(context);
-            }
-
-            private Prefs Prefs { get; }
-
-            protected override bool RunInBackground(params Void[] @params)
-            {
-                try
-                {
-                    string token = Prefs.Token;
-                    if (token == null)
-                    {
-                        return true;
-                    }
-                    string url = $"https://slack.com/api/auth.test?token={token}";
-                    JSONObject result = JsonReader.ReadJsonFromUrl(url);
-                    Prefs.Token = result.ToString();
-                    return true;
-                }
-                catch (Exception e)
-                {
-                }
-                return false;
             }
         }
     }

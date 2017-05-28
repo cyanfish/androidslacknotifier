@@ -35,7 +35,7 @@ namespace Lichess4545SlackNotifier
         public JSONObject Auth
         {
             get => new JSONObject(Source.GetString("auth", "{\"ok\": false}"));
-            set => Source.Edit().PutString("auth", value.ToString()).Commit();
+            set => Source.Edit().PutString("auth", value?.ToString()).Commit();
         }
 
         public string Token

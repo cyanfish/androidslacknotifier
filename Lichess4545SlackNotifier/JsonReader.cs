@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -21,6 +21,14 @@ namespace Lichess4545SlackNotifier
             using (var client = new WebClient())
             {
                 return new JSONObject(client.DownloadString(url));
+            }
+        }
+
+        public static async Task<JSONObject> ReadJsonFromUrlAsync(string url)
+        {
+            using (var client = new WebClient())
+            {
+                return new JSONObject(await client.DownloadStringTaskAsync(url));
             }
         }
     }

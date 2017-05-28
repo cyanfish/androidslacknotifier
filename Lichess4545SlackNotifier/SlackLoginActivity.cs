@@ -48,54 +48,6 @@ namespace Lichess4545SlackNotifier
             state = savedInstanceState.GetString("state");
         }
 
-        private class GetAccessTokenTask : AsyncTask<Void, Void, bool>
-        {
-            private readonly Activity context;
-            private readonly string code;
-
-            public GetAccessTokenTask(Activity context, string code)
-            {
-                this.context = context;
-                this.code = code;
-                Prefs = new Prefs(context);
-            }
-
-            private Prefs Prefs { get; }
-
-            protected override bool RunInBackground(params Void[] @params)
-            {
-                try
-                {
-                    string url = $"https://slack.com/api/oauth.access?client_id={Creds.client_id}&client_secret={Creds.client_secret}&code={code}&redirect_uri={Constants.redirect_uri}";
-                    JSONObject tokenResult = JsonReader.ReadJsonFromUrl(url);
-                    Prefs.Token = tokenResult.GetString("access_token");
-
-                    string authUrl = $"https://slack.com/api/auth.test?token={Prefs.Token}";
-                    Prefs.Auth = JsonReader.ReadJsonFromUrl(authUrl);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                }
-                return false;
-            }
-
-            protected override void OnPostExecute(bool ok)
-            {
-                if (ok)
-                {
-                    Toast.MakeText(context, "Login succeeded", ToastLength.Short).Show();
-                    context.SetResult(Result.Ok);
-                }
-                else
-                {
-                    Toast.MakeText(context, "Login failed", ToastLength.Short).Show();
-                    context.SetResult(Result.Ok);
-                }
-                context.Finish();
-            }
-        }
-
         private class Client : WebViewClient
         {
             private readonly Activity context;
@@ -105,12 +57,15 @@ namespace Lichess4545SlackNotifier
             {
                 this.context = context;
                 this.state = state;
+                Prefs = new Prefs(context);
             }
+
+            private Prefs Prefs { get; }
 
             [Obsolete("deprecated")]
             public override bool ShouldOverrideUrlLoading(WebView view, string url)
             {
-                if (url.ToString().StartsWith(Constants.redirect_uri))
+                if (url.StartsWith(Constants.redirect_uri))
                 {
                     var uri = Uri.Parse(url);
                     string error = uri.GetQueryParameter("error");
@@ -120,7 +75,7 @@ namespace Lichess4545SlackNotifier
                         string returnedState = uri.GetQueryParameter("state");
                         if (state.Equals(returnedState))
                         {
-                            new GetAccessTokenTask(context, code).Execute();
+                            GetAccessToken(code);
                             return true;
                         }
                     }
@@ -129,6 +84,29 @@ namespace Lichess4545SlackNotifier
                     context.Finish();
                 }
                 return false;
+            }
+
+            private async void GetAccessToken(string code)
+            {
+                try
+                {
+                    string url =
+                        $"https://slack.com/api/oauth.access?client_id={Creds.client_id}&client_secret={Creds.client_secret}&code={code}&redirect_uri={Constants.redirect_uri}";
+                    JSONObject tokenResult = await JsonReader.ReadJsonFromUrlAsync(url);
+                    Prefs.Token = tokenResult.GetString("access_token");
+
+                    string authUrl = $"https://slack.com/api/auth.test?token={Prefs.Token}";
+                    Prefs.Auth = await JsonReader.ReadJsonFromUrlAsync(authUrl);
+
+                    Toast.MakeText(context, "Login succeeded", ToastLength.Short).Show();
+                    context.SetResult(Result.Ok);
+                }
+                catch (Exception)
+                {
+                    Toast.MakeText(context, "Login failed", ToastLength.Short).Show();
+                    context.SetResult(Result.Ok);
+                }
+                context.Finish();
             }
         }
     }
