@@ -17,22 +17,6 @@ namespace Lichess4545SlackNotifier
 {
     public class JsonReader
     {
-        public static JSONObject ReadJsonFromUrl(string url)
-        {
-            using (var client = new WebClient())
-            {
-                return new JSONObject(client.DownloadString(url));
-            }
-        }
-
-        public static async Task<JSONObject> ReadJsonFromUrlAsync(string url)
-        {
-            using (var client = new WebClient())
-            {
-                return new JSONObject(await client.DownloadStringTaskAsync(url));
-            }
-        }
-
         public static async Task<T> ReadJsonFromUrlAsync<T>(string url)
         {
             using (var client = new WebClient())

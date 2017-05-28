@@ -17,12 +17,8 @@ namespace Lichess4545SlackNotifier
 {
     public class Prefs
     {
-        private readonly Context context;
-
         public Prefs(Context context)
         {
-            this.context = context;
-
             Source = context.GetSharedPreferences("prefs", FileCreationMode.Private);
         }
 

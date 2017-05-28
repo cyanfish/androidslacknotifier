@@ -18,7 +18,7 @@ namespace Lichess4545SlackNotifier
     [Activity(Label = "Lichess4545SlackNotifier", Icon = "@drawable/icon")]
     public class SlackLoginActivity : Activity
     {
-        private SecureRandom random = new SecureRandom();
+        private readonly SecureRandom random = new SecureRandom();
 
         private string state;
 
@@ -33,7 +33,7 @@ namespace Lichess4545SlackNotifier
             webView.Settings.JavaScriptEnabled = true;
             webView.SetWebViewClient(new Client(this, state));
 
-            string url = $"https://slack.com/oauth/authorize?client_id={Creds.client_id}&scope={Constants.scope}&redirect_uri={Constants.redirect_uri}&state={state}&team={Constants.team}";
+            string url = $"https://slack.com/oauth/authorize?client_id={Creds.ClientId}&scope={Constants.Scope}&redirect_uri={Constants.RedirectUri}&state={state}&team={Constants.Team}";
             webView.LoadUrl(url);
         }
 
@@ -66,7 +66,7 @@ namespace Lichess4545SlackNotifier
             [Obsolete("deprecated")]
             public override bool ShouldOverrideUrlLoading(WebView view, string url)
             {
-                if (url.StartsWith(Constants.redirect_uri))
+                if (url.StartsWith(Constants.RedirectUri))
                 {
                     var uri = Uri.Parse(url);
                     string error = uri.GetQueryParameter("error");
@@ -92,7 +92,7 @@ namespace Lichess4545SlackNotifier
                 try
                 {
                     string url =
-                        $"https://slack.com/api/oauth.access?client_id={Creds.client_id}&client_secret={Creds.client_secret}&code={code}&redirect_uri={Constants.redirect_uri}";
+                        $"https://slack.com/api/oauth.access?client_id={Creds.ClientId}&client_secret={Creds.ClientSecret}&code={code}&redirect_uri={Constants.RedirectUri}";
                     var tokenResponse = await JsonReader.ReadJsonFromUrlAsync<TokenResponse>(url);
                     Prefs.Token = tokenResponse.AccessToken;
 
