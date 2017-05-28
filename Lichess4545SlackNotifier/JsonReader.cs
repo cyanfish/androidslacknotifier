@@ -10,6 +10,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using Newtonsoft.Json;
 using Org.Json;
 
 namespace Lichess4545SlackNotifier
@@ -29,6 +30,14 @@ namespace Lichess4545SlackNotifier
             using (var client = new WebClient())
             {
                 return new JSONObject(await client.DownloadStringTaskAsync(url));
+            }
+        }
+
+        public static async Task<T> ReadJsonFromUrlAsync<T>(string url)
+        {
+            using (var client = new WebClient())
+            {
+                return JsonConvert.DeserializeObject<T>(await client.DownloadStringTaskAsync(url));
             }
         }
     }

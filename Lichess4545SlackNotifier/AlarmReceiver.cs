@@ -8,6 +8,8 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Util;
+using Lichess4545SlackNotifier.SlackApi;
+using Newtonsoft.Json;
 using Org.Json;
 
 namespace Lichess4545SlackNotifier
@@ -32,28 +34,23 @@ namespace Lichess4545SlackNotifier
                 var userMap = await buildUserMap(token);
 
                 string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
-                JSONObject result = await JsonReader.ReadJsonFromUrlAsync(url);
+                var response = await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
+                
+                var unreadChannels = new List<Channel>();
 
-                JSONArray channels = result.GetJSONArray("channels");
-                JSONArray groups = result.GetJSONArray("groups");
-                JSONArray mpims = result.GetJSONArray("mpims");
-                JSONArray ims = result.GetJSONArray("ims");
+                extract_unread_channels(response.Channels, unreadChannels);
+                extract_unread_channels(response.Groups, unreadChannels);
+                extract_unread_channels(response.Mpims, unreadChannels);
+                extract_unread_channels(response.Ims, unreadChannels);
 
-                var unreadChannels = new List<JSONObject>();
-
-                extract_unread_channels(channels, unreadChannels);
-                extract_unread_channels(groups, unreadChannels);
-                extract_unread_channels(mpims, unreadChannels);
-                extract_unread_channels(ims, unreadChannels);
-
-                foreach (JSONObject channel in unreadChannels)
+                foreach (var channel in unreadChannels)
                 {
                     Log.Debug("slackn", channel.ToString());
-                    if (channel.Has("is_im") && channel.GetBoolean("is_im"))
+                    if (channel.IsIm)
                     {
                         CreateNotification(userMap, context, channel);
                     }
-                    if (channel.Has("is_mpim") && channel.GetBoolean("is_mpim"))
+                    if (channel.IsMpim)
                     {
                         CreateNotification(userMap, context, channel);
                     }
@@ -61,43 +58,37 @@ namespace Lichess4545SlackNotifier
             }
             catch (IOException e)
             {
+                Log.Error("slackn", e.ToString());
             }
-            catch (JSONException e)
+            catch (JsonSerializationException e)
             {
+                Log.Error("slackn", e.ToString());
             }
         }
 
         private async Task<Dictionary<string, string>> buildUserMap(string token)
         {
             string url = $"https://slack.com/api/users.list?token={token}";
-            JSONObject response = await JsonReader.ReadJsonFromUrlAsync(url);
-            JSONArray members = response.GetJSONArray("members");
-            var result = new Dictionary<string, string>();
-            for (int i = 0; i < members.Length(); i++)
-            {
-                JSONObject member = members.GetJSONObject(i);
-                result.Add(member.GetString("id"), member.GetString("name"));
-            }
-            return result;
+            var response = await JsonReader.ReadJsonFromUrlAsync<UserListResponse>(url);
+            return response.Members.ToDictionary(member => member.Id, member => member.Name);
         }
 
-        private void extract_unread_channels(JSONArray channels, List<JSONObject> unreadChannels)
+        private void extract_unread_channels(List<Channel> channels, List<Channel> unreadChannels)
         {
-            for (int i = 0; i < channels.Length(); i++)
+            foreach (var channel in channels)
             {
-                JSONObject obj = channels.GetJSONObject(i);
-                if (obj.Has("is_archived") && obj.GetBoolean("is_archived"))
+                if (channel.IsArchived)
                 {
                     continue;
                 }
-                if (obj.Has("unread_count_display") && obj.GetInt("unread_count_display") > 0)
+                if (channel.UnreadCountDisplay > 0)
                 {
-                    unreadChannels.Add(obj);
+                    unreadChannels.Add(channel);
                 }
             }
         }
 
-        private void CreateNotification(Dictionary<string, string> userMap, Context context, JSONObject channel)
+        private void CreateNotification(Dictionary<string, string> userMap, Context context, Channel channel)
         {
             string text = GetLatestText(channel);
             long ts = GetLatestTimestamp(channel);
@@ -112,7 +103,7 @@ namespace Lichess4545SlackNotifier
                     .SetAutoCancel(true);
             mBuilder.SetStyle(new Notification.BigTextStyle().BigText(text));
             // Creates an explicit intent for an Activity in your app
-            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.team}&id={channel.GetString("id")}"); // G0DFRURGQ
+            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.team}&id={channel.Id}"); // G0DFRURGQ
             Intent resultIntent = new Intent(Intent.ActionView, uri);
 
             // The stack builder object will contain an artificial back stack for the
@@ -128,22 +119,20 @@ namespace Lichess4545SlackNotifier
             NotificationManager mNotificationManager =
                 (NotificationManager)context.GetSystemService(Context.NotificationService);
             // mId allows you to update the notification later on.
-            int id = channel.GetString("id").GetHashCode(); // hashCode is not guaranteed unique, but might be good enough
+            int id = channel.Id.GetHashCode(); // hashCode is not guaranteed unique, but might be good enough
             mNotificationManager.Notify(id, mBuilder.Build());
         }
 
-        private string GetLatestText(JSONObject channel)
+        private string GetLatestText(Channel channel)
         {
-            JSONObject latest = channel.GetJSONObject("latest");
-            string text = latest.GetString("text");
+            string text = channel.Latest.Text;
             text = ReplaceLinks(text);
             return text;
         }
 
-        private long GetLatestTimestamp(JSONObject channel)
+        private long GetLatestTimestamp(Channel channel)
         {
-            JSONObject latest = channel.GetJSONObject("latest");
-            string tsStr = latest.GetString("ts");
+            string tsStr = channel.Latest.Ts;
             double tsDouble = double.Parse(tsStr);
             long tsLong = (long)(tsDouble * 1000);
             return tsLong;
@@ -154,43 +143,27 @@ namespace Lichess4545SlackNotifier
             return Regex.Replace(text, "<([@#])([\\w-]+)\\|([\\w-]+)?>", m => m.Groups[1].Value + m.Groups[3].Value);
         }
 
-        private string GetChannelName(Dictionary<string, string> userMap, string currentUserName, JSONObject channel)
+        private string GetChannelName(Dictionary<string, string> userMap, string currentUserName, Channel channel)
         {
-            if (channel.Has("is_im") && channel.GetBoolean("is_im"))
+            if (channel.IsIm)
             {
-                string userId = channel.GetString("user");
-                if (!userMap.ContainsKey(userId))
+                string userId = channel.User;
+                return userMap.TryGetValue(userId, out string userName) ? userName : userId;
+            }
+            if (channel.IsMpim)
+            {
+                try
                 {
-                    return userId;
+                    return string.Join(", ", channel.Members.Select(x => userMap[x]).Where(x => x != currentUserName));
                 }
-                return userMap[userId];
-            }
-            if (channel.Has("is_mpim") && channel.GetBoolean("is_mpim"))
-            {
-                JSONArray members = channel.GetJSONArray("members");
-                var userNames = new List<string>();
-                for (int i = 0; i < members.Length(); i++)
+                catch (KeyNotFoundException)
                 {
-                    string userId = members.GetString(i);
-                    if (!userMap.ContainsKey(userId))
-                    {
-                        return channel.GetString("name");
-                    }
-                    string userName = userMap[userId];
-                    if (!userName.Equals(currentUserName))
-                    {
-                        userNames.Add(userName);
-                    }
+                    return channel.Name;
                 }
-                return string.Join(", ", userNames);
             }
-            if (channel.Has("is_channel") && channel.GetBoolean("is_channel"))
+            if (channel.IsChannel || channel.IsGroup)
             {
-                return "#" + channel.GetString("name");
-            }
-            if (channel.Has("is_group") && channel.GetBoolean("is_group"))
-            {
-                return "#" + channel.GetString("name");
+                return "#" + channel.Name;
             }
             return "";
         }
