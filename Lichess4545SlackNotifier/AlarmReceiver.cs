@@ -2,22 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Runtime;
 using Android.Util;
-using Android.Views;
-using Android.Widget;
-using Java.Lang;
-using Java.Util.Regex;
 using Org.Json;
-using Boolean = System.Boolean;
-using Double = System.Double;
-using Pattern = Android.OS.Pattern;
-using String = System.String;
 
 namespace Lichess4545SlackNotifier
 {
@@ -30,9 +20,9 @@ namespace Lichess4545SlackNotifier
             new PollTask().Execute(context);
         }
 
-        private class PollTask : AsyncTask<Context, Java.Lang.Void, Boolean>
+        private class PollTask : AsyncTask<Context, Java.Lang.Void, bool>
         {
-            private Dictionary<String, String> userMap;
+            private Dictionary<string, string> userMap;
 
             protected override bool RunInBackground(params Context[] context)
             {
@@ -40,11 +30,11 @@ namespace Lichess4545SlackNotifier
 
                 try
                 {
-                    String token = context[0].GetSharedPreferences("prefs", FileCreationMode.Private).GetString("token", null);
+                    string token = context[0].GetSharedPreferences("prefs", FileCreationMode.Private).GetString("token", null);
 
                     userMap = buildUserMap(token);
 
-                    String url = String.Format("https://slack.com/api/rtm.start?token=%s&mpim_aware=true", token);
+                    string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
                     JSONObject result = JsonReader.ReadJsonFromUrl(url);
 
                     JSONArray channels = result.GetJSONArray("channels");
@@ -64,11 +54,11 @@ namespace Lichess4545SlackNotifier
                         Log.Debug("slackn", channel.ToString());
                         if (channel.Has("is_im") && channel.GetBoolean("is_im"))
                         {
-                            createNotification(context[0], channel);
+                            CreateNotification(context[0], channel);
                         }
                         if (channel.Has("is_mpim") && channel.GetBoolean("is_mpim"))
                         {
-                            createNotification(context[0], channel);
+                            CreateNotification(context[0], channel);
                         }
                     }
 
@@ -83,9 +73,9 @@ namespace Lichess4545SlackNotifier
                 return false;
             }
 
-            private Dictionary<String, String> buildUserMap(String token)
+            private Dictionary<string, string> buildUserMap(string token)
             {
-                String url = String.Format("https://slack.com/api/users.list?token=%s", token);
+                string url = $"https://slack.com/api/users.list?token={token}";
                 JSONObject response = JsonReader.ReadJsonFromUrl(url);
                 JSONArray members = response.GetJSONArray("members");
                 var result = new Dictionary<string, string>();
@@ -113,11 +103,11 @@ namespace Lichess4545SlackNotifier
                 }
             }
 
-            private void createNotification(Context context, JSONObject channel)
+            private void CreateNotification(Context context, JSONObject channel)
             {
-                String text = getLatestText(channel);
-                long ts = getLatestTimestamp(channel);
-                String currentUserName = Config.GetLoggedInUser(context);
+                string text = GetLatestText(channel);
+                long ts = GetLatestTimestamp(channel);
+                string currentUserName = Config.GetLoggedInUser(context);
                 Notification.Builder mBuilder =
                     new Notification.Builder(context)
                         .SetSmallIcon(Resource.Drawable.slack_icon_full)
@@ -148,7 +138,7 @@ namespace Lichess4545SlackNotifier
                 mNotificationManager.Notify(id, mBuilder.Build());
             }
 
-            private string getLatestText(JSONObject channel)
+            private string GetLatestText(JSONObject channel)
             {
                 JSONObject latest = channel.GetJSONObject("latest");
                 string text = latest.GetString("text");
@@ -156,11 +146,11 @@ namespace Lichess4545SlackNotifier
                 return text;
             }
 
-            private long getLatestTimestamp(JSONObject channel)
+            private long GetLatestTimestamp(JSONObject channel)
             {
                 JSONObject latest = channel.GetJSONObject("latest");
                 string tsStr = latest.GetString("ts");
-                double tsDouble = Double.Parse(tsStr);
+                double tsDouble = double.Parse(tsStr);
                 long tsLong = (long)(tsDouble * 1000);
                 return tsLong;
             }
@@ -174,7 +164,7 @@ namespace Lichess4545SlackNotifier
             {
                 if (channel.Has("is_im") && channel.GetBoolean("is_im"))
                 {
-                    String userId = channel.GetString("user");
+                    string userId = channel.GetString("user");
                     if (!userMap.ContainsKey(userId))
                     {
                         return userId;
@@ -187,12 +177,12 @@ namespace Lichess4545SlackNotifier
                     var userNames = new List<string>();
                     for (int i = 0; i < members.Length(); i++)
                     {
-                        String userId = members.GetString(i);
+                        string userId = members.GetString(i);
                         if (!userMap.ContainsKey(userId))
                         {
                             return channel.GetString("name");
                         }
-                        String userName = userMap[userId];
+                        string userName = userMap[userId];
                         if (!userName.Equals(currentUserName))
                         {
                             userNames.Add(userName);
