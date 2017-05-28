@@ -103,7 +103,7 @@ namespace Lichess4545SlackNotifier
                     .SetAutoCancel(true);
             mBuilder.SetStyle(new Notification.BigTextStyle().BigText(text));
             // Creates an explicit intent for an Activity in your app
-            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.team}&id={channel.Id}"); // G0DFRURGQ
+            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.Team}&id={channel.Id}"); // G0DFRURGQ
             Intent resultIntent = new Intent(Intent.ActionView, uri);
 
             // The stack builder object will contain an artificial back stack for the
