@@ -57,7 +57,10 @@ namespace Lichess4545SlackNotifier
             {
                 this.context = context;
                 this.code = code;
+                Prefs = new Prefs(context);
             }
+
+            private Prefs Prefs { get; }
 
             protected override bool RunInBackground(params Void[] @params)
             {
@@ -65,12 +68,10 @@ namespace Lichess4545SlackNotifier
                 {
                     string url = $"https://slack.com/api/oauth.access?client_id={Creds.client_id}&client_secret={Creds.client_secret}&code={code}&redirect_uri={Constants.redirect_uri}";
                     JSONObject tokenResult = JsonReader.ReadJsonFromUrl(url);
-                    string token = tokenResult.GetString("access_token");
-                    context.GetSharedPreferences("prefs", FileCreationMode.Private).Edit().PutString("token", token).Commit();
+                    Prefs.Token = tokenResult.GetString("access_token");
 
-                    string authUrl = $"https://slack.com/api/auth.test?token={token}";
-                    JSONObject authResult = JsonReader.ReadJsonFromUrl(authUrl);
-                    context.GetSharedPreferences("prefs", FileCreationMode.Private).Edit().PutString("auth", authResult.ToString()).Commit();
+                    string authUrl = $"https://slack.com/api/auth.test?token={Prefs.Token}";
+                    Prefs.Auth = JsonReader.ReadJsonFromUrl(authUrl);
                     return true;
                 }
                 catch (Exception e)

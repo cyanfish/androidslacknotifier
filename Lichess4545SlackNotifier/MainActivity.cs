@@ -6,6 +6,7 @@ using Android.Widget;
 using Android.OS;
 using Android.Views;
 using Java.Lang;
+using Ninject;
 using Org.Json;
 
 namespace Lichess4545SlackNotifier
@@ -13,53 +14,61 @@ namespace Lichess4545SlackNotifier
     [Activity(Label = "Lichess4545SlackNotifier", MainLauncher = true, Icon = "@drawable/icon")]
     public class MainActivity : Activity
     {
-        private const int SECOND = 1000;
-        private const int MINUTE = 60 * SECOND;
-        private const int HOUR = 60 * MINUTE;
-
         private const int LOGIN_REQUEST = 1;
 
-        private Button loginButton;
-        private Button logoutButton;
-        private TextView status;
-        private Spinner intervalSpinner;
+        [InjectView(Resource.Id.LoginButton)]
+        private Button LoginButton { get; set; }
+
+        [InjectView(Resource.Id.LogoutButton)]
+        private Button LogoutButton { get; set; }
+
+        [InjectView(Resource.Id.status)]
+        private TextView Status { get; set; }
+
+        [InjectView(Resource.Id.IntervalSpinner)]
+        private Spinner IntervalSpinner { get; set; }
+
+        [Inject]
+        public Prefs Prefs { get; set; }
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             SetContentView(Resource.Layout.Main2);
-            
-            loginButton = FindViewById<Button>(Resource.Id.LoginButton);
-            loginButton.Click += (sender, args) => StartActivityForResult(new Intent(this, typeof(SlackLoginActivity)), LOGIN_REQUEST);
 
-            logoutButton = FindViewById<Button>(Resource.Id.LogoutButton);
-            logoutButton.Click += (sender, args) =>
+            KernelManager.Inject(this);
+            
+            LoginButton = FindViewById<Button>(Resource.Id.LoginButton);
+            LoginButton.Click += (sender, args) => StartActivityForResult(new Intent(this, typeof(SlackLoginActivity)), LOGIN_REQUEST);
+
+            LogoutButton = FindViewById<Button>(Resource.Id.LogoutButton);
+            LogoutButton.Click += (sender, args) =>
             {
-                GetSharedPreferences("prefs", FileCreationMode.Private).Edit().Remove("auth").Commit();
+                Prefs.Auth = null;
                 RefreshDisplay(true);
             };
 
-            status = FindViewById<TextView>(Resource.Id.status);
+            Status = FindViewById<TextView>(Resource.Id.status);
 
             string[] intervalChoices = { "Disabled", "Every minute", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
-            var intervalValues = new List<long> { 0L, MINUTE, 10 * MINUTE, 20 * MINUTE, 30 * MINUTE, HOUR, 2 * HOUR };
-            intervalSpinner = FindViewById<Spinner>(Resource.Id.IntervalSpinner);
-            intervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
-            long interval = GetSharedPreferences("prefs", FileCreationMode.Private).GetLong("interval", HOUR);
-            intervalSpinner.SetSelection(intervalValues.IndexOf(interval));
-            intervalSpinner.ItemSelected += (sender, args) =>
+            var intervalValues = new List<long> { 0L, TimeConstants.Minute, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
+            IntervalSpinner = FindViewById<Spinner>(Resource.Id.IntervalSpinner);
+            IntervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
+            long interval = Prefs.Interval;
+            IntervalSpinner.SetSelection(intervalValues.IndexOf(interval));
+            IntervalSpinner.ItemSelected += (sender, args) =>
             {
                 long newValue = intervalValues[args.Position];
                 long oldValue = Config.GetAlarmInterval(this);
                 if (newValue != oldValue)
                 {
-                    GetSharedPreferences("prefs", FileCreationMode.Private).Edit().PutLong("interval", newValue).Commit();
+                    Prefs.Interval = newValue;
                     Config.SetAlarm(this);
                 }
             };
 
             RefreshDisplay(true);
-            new TestAuthTask(this).Execute();
+            new MainActivity.TestAuthTask(this).Execute();
             Config.SetAlarm(this);
         }
 
@@ -79,10 +88,10 @@ namespace Lichess4545SlackNotifier
         {
             if (!connected)
             {
-                loginButton.Visibility = ViewStates.Visible;
-                logoutButton.Visibility = ViewStates.Gone;
-                status.Visibility = ViewStates.Visible;
-                status.Text = "Couldn't connect to slack";
+                LoginButton.Visibility = ViewStates.Visible;
+                LogoutButton.Visibility = ViewStates.Gone;
+                Status.Visibility = ViewStates.Visible;
+                Status.Text = "Couldn't connect to slack";
                 return;
             }
 
@@ -90,17 +99,17 @@ namespace Lichess4545SlackNotifier
             if (user != null)
             {
                 // Logged in
-                loginButton.Visibility = ViewStates.Gone;
-                logoutButton.Visibility = ViewStates.Visible;
-                status.Visibility = ViewStates.Visible;
-                status.Text = $"Logged in as {user}";
+                LoginButton.Visibility = ViewStates.Gone;
+                LogoutButton.Visibility = ViewStates.Visible;
+                Status.Visibility = ViewStates.Visible;
+                Status.Text = $"Logged in as {user}";
             }
             else
             {
                 // Logged out
-                loginButton.Visibility = ViewStates.Visible;
-                logoutButton.Visibility = ViewStates.Gone;
-                status.Visibility = ViewStates.Gone;
+                LoginButton.Visibility = ViewStates.Visible;
+                LogoutButton.Visibility = ViewStates.Gone;
+                Status.Visibility = ViewStates.Gone;
             }
         }
 
@@ -111,20 +120,23 @@ namespace Lichess4545SlackNotifier
             public TestAuthTask(Activity context)
             {
                 this.context = context;
+                Prefs = new Prefs(context);
             }
+
+            private Prefs Prefs { get; }
 
             protected override bool RunInBackground(params Void[] @params)
             {
                 try
                 {
-                    string token = context.GetSharedPreferences("prefs", FileCreationMode.Private).GetString("token", null);
+                    string token = Prefs.Token;
                     if (token == null)
                     {
                         return true;
                     }
                     string url = $"https://slack.com/api/auth.test?token={token}";
                     JSONObject result = JsonReader.ReadJsonFromUrl(url);
-                    context.GetSharedPreferences("prefs", FileCreationMode.Private).Edit().PutString("auth", result.ToString()).Commit();
+                    Prefs.Token = result.ToString();
                     return true;
                 }
                 catch (Exception e)

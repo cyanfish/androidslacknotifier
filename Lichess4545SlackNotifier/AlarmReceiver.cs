@@ -30,7 +30,7 @@ namespace Lichess4545SlackNotifier
 
                 try
                 {
-                    string token = context[0].GetSharedPreferences("prefs", FileCreationMode.Private).GetString("token", null);
+                    string token = new Prefs(context[0]).Token;
 
                     userMap = buildUserMap(token);
 

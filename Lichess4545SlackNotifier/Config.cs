@@ -48,24 +48,17 @@ namespace Lichess4545SlackNotifier
 
         public static String GetLoggedInUser(Context context)
         {
-            String authStr = context.GetSharedPreferences("prefs", FileCreationMode.Private).GetString("auth", "{\"ok\": false}");
-            try
+            var auth = new Prefs(context).Auth;
+            if (auth.GetBoolean("ok"))
             {
-                var auth = new JSONObject(authStr);
-                if (auth.GetBoolean("ok"))
-                {
-                    return auth.GetString("user");
-                }
-            }
-            catch (JSONException e)
-            {
+                return auth.GetString("user");
             }
             return null;
         }
 
         public static long GetAlarmInterval(Context context)
         {
-            return context.GetSharedPreferences("prefs", FileCreationMode.Private).GetLong("interval", HOUR);
+            return new Prefs(context).Interval;
         }
     }
 }
