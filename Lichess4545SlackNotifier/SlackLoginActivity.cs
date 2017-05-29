@@ -25,6 +25,13 @@ namespace Lichess4545SlackNotifier
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            var Prefs = new Prefs(this);
+            Prefs.Token = Creds.TestToken;
+            Prefs.Auth = new AuthResponse { Ok = true, User = Creds.TestUser };
+            Finish();
+            return;
+
             SetContentView(Resource.Layout.SlackLogin);
 
             state = new BigInteger(130, random).ToString(32);

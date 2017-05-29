@@ -10,30 +10,56 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.lichess4545.slacknotifier.MainActivity"
     android:orientation="vertical">
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Login to Slack"
-        android:id="@+id/LoginButton" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/status" />
-    <Button
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Logout"
-        android:id="@+id/LogoutButton" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Poll slack:"
-        android:paddingTop="20dp"
-        android:textColor="#000000"
-        android:textSize="16dp"
-        android:id="@+id/textView" />
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/IntervalSpinner" />
+        android:id="@+id/linearLayout1"
+        android:gravity="center_vertical">
+        <Button
+            android:text="Login to Slack"
+            android:id="@+id/LoginButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <Button
+            android:text="Logout"
+            android:id="@+id/LogoutButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/PollContainer"
+            android:gravity="center_vertical">
+            <TextView
+                android:text="Poll slack:"
+                android:textColor="#ffffff"
+                android:textSize="16dp"
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp" />
+            <Spinner
+                android:id="@+id/IntervalSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+    </LinearLayout>
+    <ProgressBar
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/progressBar1"
+      android:indeterminate="true" />
+    <ListView
+        android:minWidth="25px"
+        android:minHeight="25px"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/listView1" />
 </LinearLayout>

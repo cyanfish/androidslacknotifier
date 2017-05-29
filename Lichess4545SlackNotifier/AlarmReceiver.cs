@@ -31,26 +31,17 @@ namespace Lichess4545SlackNotifier
             {
                 string token = new Prefs(context).Token;
 
-                var userMap = await buildUserMap(token);
+                var userMap = await SlackUtils.BuildUserMap(token);
 
                 string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
                 var response = await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
                 
-                var unreadChannels = new List<Channel>();
-
-                extract_unread_channels(response.Channels, unreadChannels);
-                extract_unread_channels(response.Groups, unreadChannels);
-                extract_unread_channels(response.Mpims, unreadChannels);
-                extract_unread_channels(response.Ims, unreadChannels);
+                var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0);
 
                 foreach (var channel in unreadChannels)
                 {
                     Log.Debug("slackn", channel.ToString());
-                    if (channel.IsIm)
-                    {
-                        CreateNotification(userMap, context, channel);
-                    }
-                    if (channel.IsMpim)
+                    if (channel.IsIm || channel.IsMpim)
                     {
                         CreateNotification(userMap, context, channel);
                     }
@@ -66,28 +57,6 @@ namespace Lichess4545SlackNotifier
             }
         }
 
-        private async Task<Dictionary<string, string>> buildUserMap(string token)
-        {
-            string url = $"https://slack.com/api/users.list?token={token}";
-            var response = await JsonReader.ReadJsonFromUrlAsync<UserListResponse>(url);
-            return response.Members.ToDictionary(member => member.Id, member => member.Name);
-        }
-
-        private void extract_unread_channels(List<Channel> channels, List<Channel> unreadChannels)
-        {
-            foreach (var channel in channels)
-            {
-                if (channel.IsArchived)
-                {
-                    continue;
-                }
-                if (channel.UnreadCountDisplay > 0)
-                {
-                    unreadChannels.Add(channel);
-                }
-            }
-        }
-
         private void CreateNotification(Dictionary<string, string> userMap, Context context, Channel channel)
         {
             string text = GetLatestText(channel);
@@ -96,7 +65,7 @@ namespace Lichess4545SlackNotifier
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
                     .SetSmallIcon(Resource.Drawable.slack_icon_full)
-                    .SetContentTitle(GetChannelName(userMap, currentUserName, channel))
+                    .SetContentTitle(channel.GetDisplayName(userMap, currentUserName))
                     .SetContentText(text)
                     .SetWhen(ts)
                     .SetShowWhen(true)
@@ -141,31 +110,6 @@ namespace Lichess4545SlackNotifier
         private string ReplaceLinks(string text)
         {
             return Regex.Replace(text, "<([@#])([\\w-]+)\\|([\\w-]+)?>", m => m.Groups[1].Value + m.Groups[3].Value);
-        }
-
-        private string GetChannelName(Dictionary<string, string> userMap, string currentUserName, Channel channel)
-        {
-            if (channel.IsIm)
-            {
-                string userId = channel.User;
-                return userMap.TryGetValue(userId, out string userName) ? userName : userId;
-            }
-            if (channel.IsMpim)
-            {
-                try
-                {
-                    return string.Join(", ", channel.Members.Select(x => userMap[x]).Where(x => x != currentUserName));
-                }
-                catch (KeyNotFoundException)
-                {
-                    return channel.Name;
-                }
-            }
-            if (channel.IsChannel || channel.IsGroup)
-            {
-                return "#" + channel.Name;
-            }
-            return "";
         }
     }
 }

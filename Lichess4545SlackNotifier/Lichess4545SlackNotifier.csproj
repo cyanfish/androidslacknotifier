@@ -75,6 +75,7 @@
     <Compile Include="SlackApi\AuthResponse.cs" />
     <Compile Include="SlackApi\User.cs" />
     <Compile Include="SlackApi\UserListResponse.cs" />
+    <Compile Include="SlackUtils.cs" />
     <Compile Include="SlackLoginActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
@@ -82,7 +83,6 @@
     <Compile Include="TimeConstants.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GettingStarted.Xamarin" />
     <None Include="packages.config" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
