@@ -41,5 +41,11 @@ namespace Lichess4545SlackNotifier
             get => Source.GetString("token", null);
             set => Source.Edit().PutString("token", value).Commit();
         }
+
+        public long LastDismissedTs
+        {
+            get => Source.GetLong("LastDismissedTs", -1);
+            set => Source.Edit().PutLong("LastDismissedTs", value).Commit();
+        }
     }
 }

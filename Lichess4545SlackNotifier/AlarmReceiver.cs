@@ -29,7 +29,8 @@ namespace Lichess4545SlackNotifier
 
             try
             {
-                string token = new Prefs(context).Token;
+                var prefs = new Prefs(context);
+                string token = prefs.Token;
 
                 var userMap = await SlackUtils.BuildUserMap(token);
 
@@ -38,14 +39,8 @@ namespace Lichess4545SlackNotifier
                 
                 var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0);
 
-                foreach (var channel in unreadChannels)
-                {
-                    Log.Debug("slackn", channel.ToString());
-                    if (channel.IsIm || channel.IsMpim)
-                    {
-                        CreateNotification(userMap, context, channel);
-                    }
-                }
+                var notifyChannels = unreadChannels.Where(x => (x.IsIm || x.IsMpim) && GetLatestTimestamp(x) > prefs.LastDismissedTs);
+                CreateNotification(userMap, context, notifyChannels.ToList());
             }
             catch (IOException e)
             {
@@ -57,23 +52,33 @@ namespace Lichess4545SlackNotifier
             }
         }
 
-        private void CreateNotification(Dictionary<string, string> userMap, Context context, Channel channel)
+        private void CreateNotification(Dictionary<string, string> userMap, Context context, List<Channel> channels)
         {
-            string text = channel.Latest.DisplayText(userMap);
-            long ts = GetLatestTimestamp(channel);
+            if (!channels.Any())
+            {
+                return;
+            }
             string currentUserName = new Prefs(context).Auth.User;
+            string title = channels.Count > 1
+                ? $"{channels.Select(x => x.UnreadCountDisplay).Sum()} unread messages"
+                : channels.Single().GetDisplayName(userMap, currentUserName);
+            string text = channels.OrderByDescending(GetLatestTimestamp).First().Latest.DisplayText(userMap);
+            long ts = channels.Select(GetLatestTimestamp).Max();
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
                     .SetSmallIcon(Resource.Drawable.slack_icon_full)
-                    .SetContentTitle(channel.GetDisplayName(userMap, currentUserName))
+                    .SetContentTitle(title)
                     .SetContentText(text)
                     .SetWhen(ts)
                     .SetShowWhen(true)
                     .SetAutoCancel(true);
             mBuilder.SetStyle(new Notification.BigTextStyle().BigText(text));
             // Creates an explicit intent for an Activity in your app
-            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.Team}&id={channel.Id}"); // G0DFRURGQ
-            Intent resultIntent = new Intent(Intent.ActionView, uri);
+            Intent intent = new Intent(context, typeof(DismissNotificationReceiver));
+            intent.PutExtra("ts", ts);
+            mBuilder.SetDeleteIntent(PendingIntent.GetBroadcast(context.ApplicationContext, 0, intent, 0));
+
+            Intent resultIntent = new Intent(context, typeof(MainActivity));
 
             // The stack builder object will contain an artificial back stack for the
             // started Activity.
@@ -88,7 +93,7 @@ namespace Lichess4545SlackNotifier
             NotificationManager mNotificationManager =
                 (NotificationManager)context.GetSystemService(Context.NotificationService);
             // mId allows you to update the notification later on.
-            int id = channel.Id.GetHashCode(); // hashCode is not guaranteed unique, but might be good enough
+            int id = 0;
             mNotificationManager.Notify(id, mBuilder.Build());
         }
 

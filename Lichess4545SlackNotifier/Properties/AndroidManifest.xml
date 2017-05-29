@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lichess4545.slacknotifier" android:versionCode="1" android:versionName="1.0" android:installLocation="auto">
-	<uses-sdk android:minSdkVersion="16" />
+	<uses-sdk android:minSdkVersion="16" android:targetSdkVersion="25" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-	<application android:label="Lichess4545 Slack Notifier"
-               android:theme="@android:style/Theme.Material.Light"></application>
+	<application android:label="Lichess4545 Slack Notifier" android:theme="@android:style/Theme.Material.Light"></application>
 </manifest>

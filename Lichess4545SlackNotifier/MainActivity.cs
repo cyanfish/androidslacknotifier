@@ -108,7 +108,7 @@ namespace Lichess4545SlackNotifier
             {
                 var response = await readRtm;
                 var userMap = await readUserMap;
-                var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > -1 && (x.IsMpim || x.IsIm || x.Name == "general")).ToList();
+                var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0 && (x.IsMpim || x.IsIm || x.Name == "announcements")).ToList();
                 var currentUser = Prefs.Auth.User;
                 if (MessageList.Adapter == null)
                 {
