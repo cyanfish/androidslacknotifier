@@ -120,6 +120,7 @@ namespace Lichess4545SlackNotifier
                     ((MessageListAdapter)MessageList.Adapter).NotifyDataSetChanged();
                 }
                 ProgressBar.Visibility = ViewStates.Gone;
+                Notifications.Update(userMap, this, unreadChannels, Prefs.LastDismissedTs);
             }
         }
 

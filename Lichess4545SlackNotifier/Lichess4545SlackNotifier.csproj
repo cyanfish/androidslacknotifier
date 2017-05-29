@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="AlarmSetter.cs" />
     <Compile Include="AlarmReceiver.cs" />
+    <Compile Include="Notifications.cs" />
     <Compile Include="PackageReplacedReceiver.cs" />
     <Compile Include="DismissNotificationReceiver.cs" />
     <Compile Include="BootReceiver.cs" />

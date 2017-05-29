@@ -37,7 +37,7 @@ namespace Lichess4545SlackNotifier
 
         public static async Task<IEnumerable<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
         {
-            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0 || x.Id == Constants.AnnounceChannelId).ToList();
+            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0).ToList();
             var result = new List<UnreadChannel>();
             if (subs.Contains(SubscriptionType.DirectMessages))
             {
