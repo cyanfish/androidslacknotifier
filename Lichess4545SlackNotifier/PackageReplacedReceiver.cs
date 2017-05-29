@@ -13,13 +13,13 @@ using Android.Widget;
 
 namespace Lichess4545SlackNotifier
 {
-    [BroadcastReceiver(Enabled = false, Exported = true)]
-    [IntentFilter(new[] { Intent.ActionBootCompleted })]
-    public class BootReceiver : BroadcastReceiver
+    [BroadcastReceiver(Enabled = true, Exported = true)]
+    [IntentFilter(new[] { Intent.ActionMyPackageReplaced })]
+    public class PackageReplacedReceiver : BroadcastReceiver
     {
         public override void OnReceive(Context context, Intent intent)
         {
-            Log.Info("slackn", "Boot received");
+            Log.Info("slackn", "Package replaced received");
             new AlarmSetter(context).SetAlarm();
         }
     }
