@@ -26,11 +26,14 @@ namespace Lichess4545SlackNotifier
         {
             base.OnCreate(bundle);
 
+#if DEBUG
+            // Log in automatically with test credentials
             var Prefs = new Prefs(this);
             Prefs.Token = Creds.TestToken;
             Prefs.Auth = new AuthResponse { Ok = true, User = Creds.TestUser };
             Finish();
             return;
+#endif
 
             SetContentView(Resource.Layout.SlackLogin);
 
