@@ -18,6 +18,63 @@ namespace Lichess4545SlackNotifier
             return response.Members.ToDictionary(member => member.Id, member => member.Name);
         }
 
+        public static async Task<RtmStartResponse> RtmStart(string token)
+        {
+            string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
+            return await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
+        }
+
+        public static async Task<ChannelHistoryResponse> ChannelHistory(string token, string channelId)
+        {
+            string url = $"https://slack.com/api/channels.history?token={token}&channel={channelId}&unreads=true";
+            return await JsonReader.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
+        }
+
+        public static async Task<ChannelHistoryResponse> AnnounceHistory(string token)
+        {
+            return await ChannelHistory(token, Constants.AnnounceChannelId);
+        }
+
+        public static async Task<IEnumerable<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
+        {
+            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0).ToList();
+            var result = new List<UnreadChannel>();
+            if (subs.Contains(SubscriptionType.DirectMessages))
+            {
+                result.AddRange(await Task.WhenAll(channelsWithUnreads.Where(x => x.IsIm || x.IsMpim).Select(async x => new UnreadChannel
+                {
+                    ChannelName = x.GetDisplayName(userMap, currentUser),
+                    Messages = await x.MessageHistory(token)
+                })));
+            }
+            var announceChannel = channelsWithUnreads.FirstOrDefault(x => x.Id == Constants.AnnounceChannelId);
+            var announceSubs = subs.Union(SubscriptionType.AllAnnounce).ToList();
+            if (announceChannel != null && announceSubs.Any())
+            {
+                var messages = await announceChannel.MessageHistory(token);
+                var subscribedMessages = messages.Where(x =>
+                    announceSubs.Any(y =>
+                        x.Text.IndexOf(y.Tag, StringComparison.InvariantCultureIgnoreCase) != -1)).ToList();
+                if (subscribedMessages.Any())
+                {
+                    result.Add(new UnreadChannel
+                    {
+                        ChannelName = announceChannel.GetDisplayName(userMap, currentUser),
+                        Messages = subscribedMessages
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        private static async Task<List<Message>> MessageHistory(this Channel channel, string token)
+        {
+            return channel.UnreadCountDisplay > 1
+                ? (await ChannelHistory(token, channel.Id)).Messages.Take(channel.UnreadCountDisplay).ToList()
+                : new List<Message> { channel.Latest };
+        }
+
         public static string GetDisplayName(this Channel channel, Dictionary<string, string> userMap, string currentUserName)
         {
             if (channel.IsIm)

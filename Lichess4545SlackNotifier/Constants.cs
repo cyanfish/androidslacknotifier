@@ -21,5 +21,9 @@ namespace Lichess4545SlackNotifier
         public const string RedirectUri = "https://lichess4545.com/redirect";
 
         public const string Team = "T0CSGMP0R";
+
+        public const string AnnounceChannelName = "announcements";
+
+        public const string AnnounceChannelId = "C2UP34BCZ";
     }
 }

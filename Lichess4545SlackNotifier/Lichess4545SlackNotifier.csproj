@@ -64,6 +64,7 @@
     <Compile Include="PackageReplacedReceiver.cs" />
     <Compile Include="DismissNotificationReceiver.cs" />
     <Compile Include="BootReceiver.cs" />
+    <Compile Include="SlackApi\ChannelHistoryResponse.cs" />
     <Compile Include="SlackApi\TokenResponse.cs" />
     <Compile Include="SlackApi\Channel.cs" />
     <Compile Include="Constants.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="SubscriptionsDialogFragment.cs" />
     <Compile Include="SubscriptionType.cs" />
     <Compile Include="TimeConstants.cs" />
+    <Compile Include="UnreadChannel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

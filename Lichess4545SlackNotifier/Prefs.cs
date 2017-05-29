@@ -50,7 +50,7 @@ namespace Lichess4545SlackNotifier
 
         public IEnumerable<SubscriptionType> Subscriptions
         {
-            get => Source.GetStringSet("Subscriptions", new List<string>()).Select(SubscriptionType.FromId);
+            get => Source.GetStringSet("Subscriptions", SubscriptionType.All.Select(x => x.Id).ToList()).Select(SubscriptionType.FromId);
             set => Source.Edit().PutStringSet("Subscriptions", value.Select(x => x.Id).ToList()).Commit();
         }
     }

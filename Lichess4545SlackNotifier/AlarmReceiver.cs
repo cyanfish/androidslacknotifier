@@ -33,13 +33,12 @@ namespace Lichess4545SlackNotifier
                 string token = prefs.Token;
 
                 var userMap = await SlackUtils.BuildUserMap(token);
-
-                string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
-                var response = await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
                 
-                var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0);
+                var response = await SlackUtils.RtmStart(token);
 
-                var notifyChannels = unreadChannels.Where(x => (x.IsIm || x.IsMpim) && GetLatestTimestamp(x) > prefs.LastDismissedTs);
+                var unreads = await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions);
+                
+                var notifyChannels = unreads.Where(x => GetLatestTimestamp(x) > prefs.LastDismissedTs);
                 CreateNotification(userMap, context, notifyChannels.ToList());
             }
             catch (IOException e)
@@ -52,17 +51,16 @@ namespace Lichess4545SlackNotifier
             }
         }
 
-        private void CreateNotification(Dictionary<string, string> userMap, Context context, List<Channel> channels)
+        private void CreateNotification(Dictionary<string, string> userMap, Context context, List<UnreadChannel> channels)
         {
             if (!channels.Any())
             {
                 return;
             }
-            string currentUserName = new Prefs(context).Auth.User;
             string title = channels.Count > 1
-                ? $"{channels.Select(x => x.UnreadCountDisplay).Sum()} unread messages"
-                : channels.Single().GetDisplayName(userMap, currentUserName);
-            string text = channels.OrderByDescending(GetLatestTimestamp).First().Latest.DisplayText(userMap);
+                ? $"{channels.Select(x => x.Messages.Count).Sum()} unread messages"
+                : channels.Single().ChannelName;
+            string text = channels.OrderByDescending(GetLatestTimestamp).First().Messages.First().DisplayText(userMap);
             long ts = channels.Select(GetLatestTimestamp).Max();
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
@@ -97,9 +95,9 @@ namespace Lichess4545SlackNotifier
             mNotificationManager.Notify(id, mBuilder.Build());
         }
 
-        private long GetLatestTimestamp(Channel channel)
+        private long GetLatestTimestamp(UnreadChannel channel)
         {
-            string tsStr = channel.Latest.Ts;
+            string tsStr = channel.Messages.First().Ts;
             double tsDouble = double.Parse(tsStr);
             long tsLong = (long)(tsDouble * 1000);
             return tsLong;
