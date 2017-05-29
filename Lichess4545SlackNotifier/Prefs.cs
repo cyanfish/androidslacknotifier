@@ -47,5 +47,11 @@ namespace Lichess4545SlackNotifier
             get => Source.GetLong("LastDismissedTs", -1);
             set => Source.Edit().PutLong("LastDismissedTs", value).Commit();
         }
+
+        public IEnumerable<SubscriptionType> Subscriptions
+        {
+            get => Source.GetStringSet("Subscriptions", new List<string>()).Select(SubscriptionType.FromId);
+            set => Source.Edit().PutStringSet("Subscriptions", value.Select(x => x.Id).ToList()).Commit();
+        }
     }
 }

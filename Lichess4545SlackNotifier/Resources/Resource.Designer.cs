@@ -85,41 +85,44 @@ namespace Lichess4545SlackNotifier
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f060007
-			public const int IntervalSpinner = 2131099655;
+			// aapt resource value: 0x7f07000c
+			public const int ActionSubscriptions = 2131165196;
 			
-			// aapt resource value: 0x7f060003
-			public const int LoginButton = 2131099651;
+			// aapt resource value: 0x7f070007
+			public const int IntervalSpinner = 2131165191;
 			
-			// aapt resource value: 0x7f060004
-			public const int LogoutButton = 2131099652;
+			// aapt resource value: 0x7f070003
+			public const int LoginButton = 2131165187;
 			
-			// aapt resource value: 0x7f060005
-			public const int PollContainer = 2131099653;
+			// aapt resource value: 0x7f070004
+			public const int LogoutButton = 2131165188;
 			
-			// aapt resource value: 0x7f060000
-			public const int activity_main = 2131099648;
+			// aapt resource value: 0x7f070005
+			public const int PollContainer = 2131165189;
 			
-			// aapt resource value: 0x7f06000a
-			public const int activity_slack_login = 2131099658;
+			// aapt resource value: 0x7f070000
+			public const int activity_main = 2131165184;
 			
-			// aapt resource value: 0x7f060002
-			public const int linearLayout1 = 2131099650;
+			// aapt resource value: 0x7f07000a
+			public const int activity_slack_login = 2131165194;
 			
-			// aapt resource value: 0x7f060009
-			public const int listView1 = 2131099657;
+			// aapt resource value: 0x7f070002
+			public const int linearLayout1 = 2131165186;
 			
-			// aapt resource value: 0x7f06000b
-			public const int login_webview = 2131099659;
+			// aapt resource value: 0x7f070009
+			public const int listView1 = 2131165193;
 			
-			// aapt resource value: 0x7f060008
-			public const int progressBar1 = 2131099656;
+			// aapt resource value: 0x7f07000b
+			public const int login_webview = 2131165195;
 			
-			// aapt resource value: 0x7f060001
-			public const int status = 2131099649;
+			// aapt resource value: 0x7f070008
+			public const int progressBar1 = 2131165192;
 			
-			// aapt resource value: 0x7f060006
-			public const int textView = 2131099654;
+			// aapt resource value: 0x7f070001
+			public const int status = 2131165185;
+			
+			// aapt resource value: 0x7f070006
+			public const int textView = 2131165190;
 			
 			static Id()
 			{
@@ -149,6 +152,22 @@ namespace Lichess4545SlackNotifier
 			}
 			
 			private Layout()
+			{
+			}
+		}
+		
+		public partial class Menu
+		{
+			
+			// aapt resource value: 0x7f060000
+			public const int menu1 = 2131099648;
+			
+			static Menu()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Menu()
 			{
 			}
 		}

@@ -135,6 +135,24 @@ namespace Lichess4545SlackNotifier
             }
         }
 
+        public override bool OnCreateOptionsMenu(IMenu menu)
+        {
+            MenuInflater.Inflate(Resource.Menu.menu1, menu);
+            return true;
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            switch (item.ItemId)
+            {
+                case Resource.Id.ActionSubscriptions:
+                    new SubscriptionsDialogFragment().Show(FragmentManager, null);
+                    return true;
+                default:
+                    return base.OnOptionsItemSelected(item);
+            }
+        }
+
         private void RefreshDisplay(bool connected)
         {
             if (!connected)
