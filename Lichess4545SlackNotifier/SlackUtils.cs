@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Android.Content;
 using Lichess4545SlackNotifier.SlackApi;
@@ -51,6 +52,13 @@ namespace Lichess4545SlackNotifier
         {
             var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.Team}&id={channel.Id}"); // G0DFRURGQ
             return new Intent(Intent.ActionView, uri);
+        }
+
+        public static string DisplayText(this Message message, Dictionary<string, string> userMap)
+        {
+            var text = Regex.Replace(message.Text, "<([@#])([\\w-]+)\\|([\\w-]+)?>", m => m.Groups[1].Value + m.Groups[3].Value);
+            text = Regex.Replace(text, "<@(U[\\w-]+)>", m => userMap.TryGetValue(m.Groups[1].Value, out string userName) ? "@" + userName : m.Groups[1].Value);
+            return text;
         }
     }
 }

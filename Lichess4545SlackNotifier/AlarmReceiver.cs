@@ -59,7 +59,7 @@ namespace Lichess4545SlackNotifier
 
         private void CreateNotification(Dictionary<string, string> userMap, Context context, Channel channel)
         {
-            string text = GetLatestText(channel);
+            string text = channel.Latest.DisplayText(userMap);
             long ts = GetLatestTimestamp(channel);
             string currentUserName = new Prefs(context).Auth.User;
             Notification.Builder mBuilder =
@@ -92,24 +92,12 @@ namespace Lichess4545SlackNotifier
             mNotificationManager.Notify(id, mBuilder.Build());
         }
 
-        private string GetLatestText(Channel channel)
-        {
-            string text = channel.Latest.Text;
-            text = ReplaceLinks(text);
-            return text;
-        }
-
         private long GetLatestTimestamp(Channel channel)
         {
             string tsStr = channel.Latest.Ts;
             double tsDouble = double.Parse(tsStr);
             long tsLong = (long)(tsDouble * 1000);
             return tsLong;
-        }
-
-        private string ReplaceLinks(string text)
-        {
-            return Regex.Replace(text, "<([@#])([\\w-]+)\\|([\\w-]+)?>", m => m.Groups[1].Value + m.Groups[3].Value);
         }
     }
 }

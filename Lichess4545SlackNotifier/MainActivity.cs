@@ -2,6 +2,7 @@
 using System.Linq;
 using Android.App;
 using Android.Content;
+using Android.Graphics;
 using Android.Widget;
 using Android.OS;
 using Android.Runtime;
@@ -13,7 +14,7 @@ using Message = Lichess4545SlackNotifier.SlackApi.Message;
 
 namespace Lichess4545SlackNotifier
 {
-    [Activity(Label = "Lichess4545SlackNotifier", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "Lichess4545 Slack Notifier", MainLauncher = true, Icon = "@drawable/icon")]
     public class MainActivity : Activity
     {
         private const int LOGIN_REQUEST = 1;
@@ -204,8 +205,10 @@ namespace Lichess4545SlackNotifier
                 var item = this[position];
                 TextView text1 = (TextView)v.FindViewById(Android.Resource.Id.Text1);
                 text1.SetText(item.GetDisplayName(userMap, currentUserName), TextView.BufferType.Normal);
+                text1.SetTextColor(new Color(64, 64, 64));
                 TextView text2 = (TextView)v.FindViewById(Android.Resource.Id.Text2);
-                text2.SetText(item.Latest?.Text ?? "", TextView.BufferType.Normal);
+                text2.SetText(item.Latest?.DisplayText(userMap) ?? "", TextView.BufferType.Normal);
+                text2.SetTextColor(new Color(64, 64, 64));
 
                 return v;
             }

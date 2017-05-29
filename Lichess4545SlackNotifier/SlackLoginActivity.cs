@@ -15,7 +15,7 @@ using Void = Java.Lang.Void;
 
 namespace Lichess4545SlackNotifier
 {
-    [Activity(Label = "Lichess4545SlackNotifier", Icon = "@drawable/icon")]
+    [Activity(Label = "Login to Slack", Icon = "@drawable/icon")]
     public class SlackLoginActivity : Activity
     {
         private readonly SecureRandom random = new SecureRandom();
