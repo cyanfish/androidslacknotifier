@@ -37,18 +37,19 @@ namespace Lichess4545SlackNotifier
 
         public static async Task<IEnumerable<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
         {
-            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0).ToList();
+            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0 || x.Id == Constants.AnnounceChannelId).ToList();
             var result = new List<UnreadChannel>();
             if (subs.Contains(SubscriptionType.DirectMessages))
             {
                 result.AddRange(await Task.WhenAll(channelsWithUnreads.Where(x => x.IsIm || x.IsMpim).Select(async x => new UnreadChannel
                 {
+                    ChannelId = x.Id,
                     ChannelName = x.GetDisplayName(userMap, currentUser),
                     Messages = await x.MessageHistory(token)
                 })));
             }
             var announceChannel = channelsWithUnreads.FirstOrDefault(x => x.Id == Constants.AnnounceChannelId);
-            var announceSubs = subs.Union(SubscriptionType.AllAnnounce).ToList();
+            var announceSubs = subs.Intersect(SubscriptionType.AllAnnounce).ToList();
             if (announceChannel != null && announceSubs.Any())
             {
                 var messages = await announceChannel.MessageHistory(token);
@@ -59,6 +60,7 @@ namespace Lichess4545SlackNotifier
                 {
                     result.Add(new UnreadChannel
                     {
+                        ChannelId = announceChannel.Id,
                         ChannelName = announceChannel.GetDisplayName(userMap, currentUser),
                         Messages = subscribedMessages
                     });
@@ -71,7 +73,7 @@ namespace Lichess4545SlackNotifier
         private static async Task<List<Message>> MessageHistory(this Channel channel, string token)
         {
             return channel.UnreadCountDisplay > 1
-                ? (await ChannelHistory(token, channel.Id)).Messages.Take(channel.UnreadCountDisplay).ToList()
+                ? (await ChannelHistory(token, channel.Id)).Messages.Take(channel.UnreadCountDisplay + 5).ToList()
                 : new List<Message> { channel.Latest };
         }
 
@@ -105,9 +107,9 @@ namespace Lichess4545SlackNotifier
             return r.Mpims.Concat(r.Ims).Concat(r.Channels).Concat(r.Groups);
         }
 
-        public static Intent GetIntent(this Channel channel)
+        public static Intent GetIntent(this UnreadChannel channel)
         {
-            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.Team}&id={channel.Id}"); // G0DFRURGQ
+            var uri = Android.Net.Uri.Parse($"slack://channel?team={Constants.Team}&id={channel.ChannelId}"); // G0DFRURGQ
             return new Intent(Intent.ActionView, uri);
         }
 

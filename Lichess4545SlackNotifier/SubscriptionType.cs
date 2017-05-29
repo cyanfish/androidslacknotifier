@@ -29,7 +29,7 @@ namespace Lichess4545SlackNotifier
 
         public static readonly IReadOnlyList<SubscriptionType> AllAnnounce = new ReadOnlyCollection<SubscriptionType>(new[] { TeamAnnounce, LonewolfAnnounce, LadderAnnounce, BlitzAnnounce, LedgerAnnounce });
 
-        public static readonly IReadOnlyList<SubscriptionType> All = new ReadOnlyCollection<SubscriptionType>(AllAnnounce.Concat(new[] { DirectMessages }).ToArray());
+        public static readonly IReadOnlyList<SubscriptionType> All = new ReadOnlyCollection<SubscriptionType>(new[] { DirectMessages }.Concat(AllAnnounce).ToArray());
 
         private static readonly Dictionary<string, SubscriptionType> Map = All.ToDictionary(x => x.Id);
 

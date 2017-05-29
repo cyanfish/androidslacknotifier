@@ -91,7 +91,7 @@ namespace Lichess4545SlackNotifier
             AlarmSetter.SetAlarm();
         }
 
-        private async void TestAuth()
+        public async void TestAuth()
         {
             string token = Prefs.Token;
             if (token == null)
@@ -108,7 +108,7 @@ namespace Lichess4545SlackNotifier
             {
                 var response = await readRtm;
                 var userMap = await readUserMap;
-                var unreadChannels = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0 && (x.IsMpim || x.IsIm || x.Name == "announcements")).ToList();
+                var unreadChannels = (await SlackUtils.GetUnreadChannels(response, token, userMap, Prefs.Auth.User, Prefs.Subscriptions)).ToList();
                 var currentUser = Prefs.Auth.User;
                 if (MessageList.Adapter == null)
                 {
@@ -188,13 +188,13 @@ namespace Lichess4545SlackNotifier
             }
         }
 
-        private class MessageListAdapter : BaseAdapter<Channel>
+        private class MessageListAdapter : BaseAdapter<UnreadChannel>
         {
             private readonly Context context;
             private readonly Dictionary<string, string> userMap;
             private readonly string currentUserName;
 
-            public MessageListAdapter(Context context, IEnumerable<Channel> unreadChannels, Dictionary<string, string> userMap, string currentUserName)
+            public MessageListAdapter(Context context, IEnumerable<UnreadChannel> unreadChannels, Dictionary<string, string> userMap, string currentUserName)
             {
                 this.context = context;
                 this.UnreadChannels = unreadChannels.ToList();
@@ -202,13 +202,13 @@ namespace Lichess4545SlackNotifier
                 this.currentUserName = currentUserName;
             }
 
-            public List<Channel> UnreadChannels { get; set; }
+            public List<UnreadChannel> UnreadChannels { get; set; }
 
-            public override Channel this[int position] => UnreadChannels[position];
+            public override UnreadChannel this[int position] => UnreadChannels[position];
 
             public override long GetItemId(int position)
             {
-                return UnreadChannels[position].Name?.GetHashCode() ?? position;
+                return UnreadChannels[position].ChannelName.GetHashCode();
             }
 
             public override View GetView(int position, View convertView, ViewGroup parent)
@@ -222,10 +222,10 @@ namespace Lichess4545SlackNotifier
 
                 var item = this[position];
                 TextView text1 = (TextView)v.FindViewById(Android.Resource.Id.Text1);
-                text1.SetText(item.GetDisplayName(userMap, currentUserName), TextView.BufferType.Normal);
+                text1.SetText(item.ChannelName, TextView.BufferType.Normal);
                 text1.SetTextColor(new Color(64, 64, 64));
                 TextView text2 = (TextView)v.FindViewById(Android.Resource.Id.Text2);
-                text2.SetText(item.Latest?.DisplayText(userMap) ?? "", TextView.BufferType.Normal);
+                text2.SetText(item.Messages.First().DisplayText(userMap) ?? "", TextView.BufferType.Normal);
                 text2.SetTextColor(new Color(64, 64, 64));
 
                 return v;

@@ -14,6 +14,8 @@ namespace Lichess4545SlackNotifier
 {
     public class UnreadChannel
     {
+        public string ChannelId { get; set; }
+
         public string ChannelName { get; set; }
 
         public List<SlackApi.Message> Messages { get; set; }
