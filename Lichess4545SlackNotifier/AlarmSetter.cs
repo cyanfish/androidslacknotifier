@@ -11,8 +11,6 @@ using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
-using Ninject;
-using Org.Json;
 
 namespace Lichess4545SlackNotifier
 {

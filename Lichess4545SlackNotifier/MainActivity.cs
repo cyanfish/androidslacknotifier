@@ -10,8 +10,8 @@ using Android.Util;
 using Android.Views;
 using Java.Lang;
 using Lichess4545SlackNotifier.SlackApi;
-using Ninject;
-using Message = Lichess4545SlackNotifier.SlackApi.Message;
+using Com.Lilarcor.Cheeseknife;
+#pragma warning disable 649
 
 namespace Lichess4545SlackNotifier
 {
@@ -21,66 +21,66 @@ namespace Lichess4545SlackNotifier
         private const int LOGIN_REQUEST = 1;
 
         [InjectView(Resource.Id.LoginButton)]
-        public Button LoginButton { get; set; }
+        private Button loginButton;
 
         [InjectView(Resource.Id.LogoutButton)]
-        public Button LogoutButton { get; set; }
+        private Button logoutButton;
 
         [InjectView(Resource.Id.status)]
-        public TextView Status { get; set; }
+        private TextView status;
 
         [InjectView(Resource.Id.IntervalSpinner)]
-        public Spinner IntervalSpinner { get; set; }
+        private Spinner intervalSpinner;
 
         [InjectView(Resource.Id.PollContainer)]
-        public LinearLayout PollContainer { get; set; }
+        private LinearLayout pollContainer;
 
         [InjectView(Resource.Id.listView1)]
-        public ListView MessageList { get; set; }
+        private ListView messageList;
 
         [InjectView(Resource.Id.progressBar1)]
-        public ProgressBar ProgressBar { get; set; }
-
-        [Inject]
-        public Prefs Prefs { get; set; }
-
-        [Inject]
-        public AlarmSetter AlarmSetter { get; set; }
+        private ProgressBar progressBar;
+        
+        private Prefs prefs;
+        private AlarmSetter alarmSetter;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             SetContentView(Resource.Layout.Main2);
 
-            KernelManager.Inject(this);
+            Cheeseknife.Inject(this);
 
-            LoginButton.Click += (sender, args) =>
+            prefs = new Prefs(this);
+            alarmSetter = new AlarmSetter(this);
+
+            loginButton.Click += (sender, args) =>
             {
                 StartActivityForResult(new Intent(this, typeof(SlackLoginActivity)), LOGIN_REQUEST);
             };
 
-            LogoutButton.Click += (sender, args) =>
+            logoutButton.Click += (sender, args) =>
             {
-                Prefs.Auth = null;
+                prefs.Auth = null;
                 RefreshDisplay(true);
             };
 
             string[] intervalChoices = { "Disabled", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
             var intervalValues = new List<long> { 0L, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
-            IntervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
-            long interval = Prefs.Interval;
-            IntervalSpinner.SetSelection(intervalValues.IndexOf(interval));
-            IntervalSpinner.ItemSelected += (sender, args) =>
+            intervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
+            long interval = prefs.Interval;
+            intervalSpinner.SetSelection(intervalValues.IndexOf(interval));
+            intervalSpinner.ItemSelected += (sender, args) =>
             {
                 long newValue = intervalValues[args.Position];
-                if (newValue != Prefs.Interval)
+                if (newValue != prefs.Interval)
                 {
-                    Prefs.Interval = newValue;
-                    AlarmSetter.SetAlarm();
+                    prefs.Interval = newValue;
+                    alarmSetter.SetAlarm();
                 }
             };
 
-            MessageList.ItemClick += (sender, args) => StartActivity(((MessageListAdapter)MessageList.Adapter).UnreadChannels[args.Position].GetIntent());
+            messageList.ItemClick += (sender, args) => StartActivity(((MessageListAdapter)messageList.Adapter).UnreadChannels[args.Position].GetIntent());
         }
 
         protected override void OnResume()
@@ -89,12 +89,12 @@ namespace Lichess4545SlackNotifier
 
             RefreshDisplay(true);
             TestAuth();
-            AlarmSetter.SetAlarm();
+            alarmSetter.SetAlarm();
         }
 
         public async void TestAuth()
         {
-            string token = Prefs.Token;
+            string token = prefs.Token;
             if (token == null)
             {
                 return;
@@ -106,24 +106,24 @@ namespace Lichess4545SlackNotifier
                 string rtmUrl = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
                 var readRtm = JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(rtmUrl);
                 var readUserMap = SlackUtils.BuildUserMap(token);
-                Prefs.Auth = await readAuth;
-                if (Prefs.Auth.Ok)
+                prefs.Auth = await readAuth;
+                if (prefs.Auth.Ok)
                 {
                     var response = await readRtm;
                     var userMap = await readUserMap;
-                    var unreadChannels = (await SlackUtils.GetUnreadChannels(response, token, userMap, Prefs.Auth.User, Prefs.Subscriptions)).ToList();
-                    var currentUser = Prefs.Auth.User;
-                    if (MessageList.Adapter == null)
+                    var unreadChannels = (await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions)).ToList();
+                    var currentUser = prefs.Auth.User;
+                    if (messageList.Adapter == null)
                     {
-                        MessageList.Adapter = new MessageListAdapter(this, unreadChannels, userMap, currentUser);
+                        messageList.Adapter = new MessageListAdapter(this, unreadChannels, userMap, currentUser);
                     }
                     else
                     {
-                        ((MessageListAdapter) MessageList.Adapter).UnreadChannels = unreadChannels;
-                        ((MessageListAdapter) MessageList.Adapter).NotifyDataSetChanged();
+                        ((MessageListAdapter) messageList.Adapter).UnreadChannels = unreadChannels;
+                        ((MessageListAdapter) messageList.Adapter).NotifyDataSetChanged();
                     }
-                    ProgressBar.Visibility = ViewStates.Gone;
-                    Notifications.Update(userMap, this, unreadChannels, Prefs.LastDismissedTs);
+                    progressBar.Visibility = ViewStates.Gone;
+                    Notifications.Update(userMap, this, unreadChannels, prefs.LastDismissedTs);
                 }
             }
             catch (Exception e)
@@ -139,7 +139,7 @@ namespace Lichess4545SlackNotifier
                 if (resultCode == Result.Ok)
                 {
                     RefreshDisplay(true);
-                    AlarmSetter.SetAlarm();
+                    alarmSetter.SetAlarm();
                 }
             }
         }
@@ -155,12 +155,12 @@ namespace Lichess4545SlackNotifier
             switch (item.ItemId)
             {
                 case Resource.Id.ActionRefresh:
-                    if (MessageList.Adapter != null)
+                    if (messageList.Adapter != null)
                     {
-                        ((MessageListAdapter)MessageList.Adapter).UnreadChannels.Clear();
-                        ((MessageListAdapter)MessageList.Adapter).NotifyDataSetChanged();
+                        ((MessageListAdapter)messageList.Adapter).UnreadChannels.Clear();
+                        ((MessageListAdapter)messageList.Adapter).NotifyDataSetChanged();
                     }
-                    ProgressBar.Visibility = ViewStates.Visible;
+                    progressBar.Visibility = ViewStates.Visible;
                     TestAuth();
                     return true;
                 case Resource.Id.ActionSubscriptions:
@@ -175,34 +175,34 @@ namespace Lichess4545SlackNotifier
         {
             if (!connected)
             {
-                LoginButton.Visibility = ViewStates.Visible;
-                LogoutButton.Visibility = ViewStates.Gone;
-                Status.Visibility = ViewStates.Visible;
-                PollContainer.Visibility = ViewStates.Gone;
-                ProgressBar.Visibility = ViewStates.Gone;
-                Status.Text = "Couldn't connect to slack";
+                loginButton.Visibility = ViewStates.Visible;
+                logoutButton.Visibility = ViewStates.Gone;
+                status.Visibility = ViewStates.Visible;
+                pollContainer.Visibility = ViewStates.Gone;
+                progressBar.Visibility = ViewStates.Gone;
+                status.Text = "Couldn't connect to slack";
                 return;
             }
 
-            string user = Prefs.Auth.User;
+            string user = prefs.Auth.User;
             if (user != null)
             {
                 // Logged in
-                LoginButton.Visibility = ViewStates.Gone;
-                LogoutButton.Visibility = ViewStates.Visible;
-                Status.Visibility = ViewStates.Visible;
-                PollContainer.Visibility = ViewStates.Visible;
-                ProgressBar.Visibility = MessageList.Adapter?.Count > 0 ? ViewStates.Gone : ViewStates.Visible;
-                Status.Text = $"Logged in as {user}";
+                loginButton.Visibility = ViewStates.Gone;
+                logoutButton.Visibility = ViewStates.Visible;
+                status.Visibility = ViewStates.Visible;
+                pollContainer.Visibility = ViewStates.Visible;
+                progressBar.Visibility = messageList.Adapter?.Count > 0 ? ViewStates.Gone : ViewStates.Visible;
+                status.Text = $"Logged in as {user}";
             }
             else
             {
                 // Logged out
-                LoginButton.Visibility = ViewStates.Visible;
-                LogoutButton.Visibility = ViewStates.Gone;
-                Status.Visibility = ViewStates.Gone;
-                PollContainer.Visibility = ViewStates.Gone;
-                ProgressBar.Visibility = ViewStates.Gone;
+                loginButton.Visibility = ViewStates.Visible;
+                logoutButton.Visibility = ViewStates.Gone;
+                status.Visibility = ViewStates.Gone;
+                pollContainer.Visibility = ViewStates.Gone;
+                progressBar.Visibility = ViewStates.Gone;
             }
         }
 
