@@ -154,6 +154,15 @@ namespace Lichess4545SlackNotifier
         {
             switch (item.ItemId)
             {
+                case Resource.Id.ActionRefresh:
+                    if (MessageList.Adapter != null)
+                    {
+                        ((MessageListAdapter)MessageList.Adapter).UnreadChannels.Clear();
+                        ((MessageListAdapter)MessageList.Adapter).NotifyDataSetChanged();
+                    }
+                    ProgressBar.Visibility = ViewStates.Visible;
+                    TestAuth();
+                    return true;
                 case Resource.Id.ActionSubscriptions:
                     new SubscriptionsDialogFragment().Show(FragmentManager, null);
                     return true;

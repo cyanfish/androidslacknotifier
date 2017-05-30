@@ -86,7 +86,10 @@ namespace Lichess4545SlackNotifier
 		{
 			
 			// aapt resource value: 0x7f07000c
-			public const int ActionSubscriptions = 2131165196;
+			public const int ActionRefresh = 2131165196;
+			
+			// aapt resource value: 0x7f07000d
+			public const int ActionSubscriptions = 2131165197;
 			
 			// aapt resource value: 0x7f070007
 			public const int IntervalSpinner = 2131165191;
