@@ -24,15 +24,14 @@ namespace Lichess4545SlackNotifier
             return await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
         }
 
-        public static async Task<ChannelHistoryResponse> ChannelHistory(string token, string channelId)
+        public static async Task<ChannelHistoryResponse> ChannelHistory(string token, Channel channel)
         {
-            string url = $"https://slack.com/api/channels.history?token={token}&channel={channelId}&unreads=true";
+            var type = channel.IsMpim ? "mpim" :
+                       channel.IsIm ? "im" :
+                       channel.IsGroup ? "groups" :
+                       "channels";
+            string url = $"https://slack.com/api/{type}.history?token={token}&channel={channel.Id}&unreads=true";
             return await JsonReader.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
-        }
-
-        public static async Task<ChannelHistoryResponse> AnnounceHistory(string token)
-        {
-            return await ChannelHistory(token, Constants.AnnounceChannelId);
         }
 
         public static async Task<IEnumerable<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
@@ -67,13 +66,13 @@ namespace Lichess4545SlackNotifier
                 }
             }
 
-            return result;
+            return result.OrderByDescending(x => x.LatestTimestamp);
         }
 
         private static async Task<List<Message>> MessageHistory(this Channel channel, string token)
         {
             return channel.UnreadCountDisplay > 1
-                ? (await ChannelHistory(token, channel.Id)).Messages.Take(channel.UnreadCountDisplay + 5).ToList()
+                ? (await ChannelHistory(token, channel)).Messages.Take(channel.UnreadCountDisplay).ToList()
                 : new List<Message> { channel.Latest };
         }
 

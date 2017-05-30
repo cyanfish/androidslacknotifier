@@ -16,7 +16,7 @@ namespace Lichess4545SlackNotifier
     {
         public static void Update(Dictionary<string, string> userMap, Context context, IEnumerable<UnreadChannel> unreadChannels, long lastDismissedTs)
         {
-            var channels = unreadChannels.Where(x => GetLatestTimestamp(x) > lastDismissedTs).ToList();
+            var channels = unreadChannels.Where(x => x.LatestTimestamp > lastDismissedTs).ToList();
             NotificationManager mNotificationManager =
                 (NotificationManager)context.GetSystemService(Context.NotificationService);
             if (!channels.Any())
@@ -27,8 +27,9 @@ namespace Lichess4545SlackNotifier
             string title = channels.Count > 1
                 ? $"{channels.Select(x => x.Messages.Count).Sum()} unread messages"
                 : channels.Single().ChannelName;
-            string text = channels.OrderByDescending(GetLatestTimestamp).First().Messages.First().DisplayText(userMap);
-            long ts = channels.Select(GetLatestTimestamp).Max();
+            string text = string.Join("\n",
+                channels.OrderByDescending(x => x.LatestTimestamp).First().Messages.OrderBy(x => x.Ts).Select(x => x.DisplayText(userMap)));
+            long ts = channels.Select(x => x.LatestTimestamp).Max();
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
                     .SetSmallIcon(Resource.Drawable.slack_icon_full)
@@ -58,14 +59,6 @@ namespace Lichess4545SlackNotifier
             // mId allows you to update the notification later on.
             int id = 0;
             mNotificationManager.Notify(id, mBuilder.Build());
-        }
-
-        private static long GetLatestTimestamp(UnreadChannel channel)
-        {
-            string tsStr = channel.Messages.First().Ts;
-            double tsDouble = double.Parse(tsStr);
-            long tsLong = (long)(tsDouble * 1000);
-            return tsLong;
         }
     }
 }

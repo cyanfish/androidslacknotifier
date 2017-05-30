@@ -6,6 +6,7 @@ using Android.Graphics;
 using Android.Widget;
 using Android.OS;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using Java.Lang;
 using Lichess4545SlackNotifier.SlackApi;
@@ -98,29 +99,36 @@ namespace Lichess4545SlackNotifier
             {
                 return;
             }
-            string url = $"https://slack.com/api/auth.test?token={token}";
-            var readAuth = JsonReader.ReadJsonFromUrlAsync<AuthResponse>(url);
-            string rtmUrl = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
-            var readRtm = JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(rtmUrl);
-            var readUserMap = SlackUtils.BuildUserMap(token);
-            Prefs.Auth = await readAuth;
-            if (Prefs.Auth.Ok)
+            try
             {
-                var response = await readRtm;
-                var userMap = await readUserMap;
-                var unreadChannels = (await SlackUtils.GetUnreadChannels(response, token, userMap, Prefs.Auth.User, Prefs.Subscriptions)).ToList();
-                var currentUser = Prefs.Auth.User;
-                if (MessageList.Adapter == null)
+                string url = $"https://slack.com/api/auth.test?token={token}";
+                var readAuth = JsonReader.ReadJsonFromUrlAsync<AuthResponse>(url);
+                string rtmUrl = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
+                var readRtm = JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(rtmUrl);
+                var readUserMap = SlackUtils.BuildUserMap(token);
+                Prefs.Auth = await readAuth;
+                if (Prefs.Auth.Ok)
                 {
-                    MessageList.Adapter = new MessageListAdapter(this, unreadChannels, userMap, currentUser);
+                    var response = await readRtm;
+                    var userMap = await readUserMap;
+                    var unreadChannels = (await SlackUtils.GetUnreadChannels(response, token, userMap, Prefs.Auth.User, Prefs.Subscriptions)).ToList();
+                    var currentUser = Prefs.Auth.User;
+                    if (MessageList.Adapter == null)
+                    {
+                        MessageList.Adapter = new MessageListAdapter(this, unreadChannels, userMap, currentUser);
+                    }
+                    else
+                    {
+                        ((MessageListAdapter) MessageList.Adapter).UnreadChannels = unreadChannels;
+                        ((MessageListAdapter) MessageList.Adapter).NotifyDataSetChanged();
+                    }
+                    ProgressBar.Visibility = ViewStates.Gone;
+                    Notifications.Update(userMap, this, unreadChannels, Prefs.LastDismissedTs);
                 }
-                else
-                {
-                    ((MessageListAdapter)MessageList.Adapter).UnreadChannels = unreadChannels;
-                    ((MessageListAdapter)MessageList.Adapter).NotifyDataSetChanged();
-                }
-                ProgressBar.Visibility = ViewStates.Gone;
-                Notifications.Update(userMap, this, unreadChannels, Prefs.LastDismissedTs);
+            }
+            catch (Exception e)
+            {
+                Log.Error("slackn", e.ToString());
             }
         }
 
