@@ -65,8 +65,8 @@ namespace Lichess4545SlackNotifier
                 RefreshDisplay(true);
             };
 
-            string[] intervalChoices = { "Disabled", "Every minute", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
-            var intervalValues = new List<long> { 0L, TimeConstants.Minute, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
+            string[] intervalChoices = { "Disabled", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
+            var intervalValues = new List<long> { 0L, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
             IntervalSpinner.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, intervalChoices);
             long interval = Prefs.Interval;
             IntervalSpinner.SetSelection(intervalValues.IndexOf(interval));
