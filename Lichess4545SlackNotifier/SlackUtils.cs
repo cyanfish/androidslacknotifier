@@ -118,5 +118,13 @@ namespace Lichess4545SlackNotifier
             text = Regex.Replace(text, "<@(U[\\w-]+)>", m => userMap.TryGetValue(m.Groups[1].Value, out string userName) ? "@" + userName : m.Groups[1].Value);
             return text;
         }
+
+        public static long LongTimestamp(this Message message)
+        {
+            string tsStr = message.Ts;
+            double tsDouble = double.Parse(tsStr);
+            long tsLong = (long)(tsDouble * 1000);
+            return tsLong;
+        }
     }
 }

@@ -27,8 +27,10 @@ namespace Lichess4545SlackNotifier
             string title = channels.Count > 1
                 ? $"{channels.Select(x => x.Messages.Count).Sum()} unread messages"
                 : channels.Single().ChannelName;
+            var mostRecentChannel = channels.OrderByDescending(x => x.LatestTimestamp).First();
+            var messagesNotSeen = mostRecentChannel.Messages.Where(x => x.LongTimestamp() > lastDismissedTs);
             string text = string.Join("\n",
-                channels.OrderByDescending(x => x.LatestTimestamp).First().Messages.OrderBy(x => x.Ts).Select(x => x.DisplayText(userMap)));
+                messagesNotSeen.OrderBy(x => x.Ts).Select(x => x.DisplayText(userMap)));
             long ts = channels.Select(x => x.LatestTimestamp).Max();
             Notification.Builder mBuilder =
                 new Notification.Builder(context)
@@ -42,7 +44,7 @@ namespace Lichess4545SlackNotifier
             // Creates an explicit intent for an Activity in your app
             Intent intent = new Intent(context, typeof(DismissNotificationReceiver));
             intent.PutExtra("ts", ts);
-            mBuilder.SetDeleteIntent(PendingIntent.GetBroadcast(context.ApplicationContext, 0, intent, 0));
+            mBuilder.SetDeleteIntent(PendingIntent.GetBroadcast(context.ApplicationContext, 0, intent, PendingIntentFlags.UpdateCurrent));
 
             Intent resultIntent = new Intent(context, typeof(MainActivity));
 
@@ -54,7 +56,7 @@ namespace Lichess4545SlackNotifier
             // Adds the back stack for the Intent (but not the Intent itself)
             // stackBuilder.addParentStack(ResultActivity.class);
             // Adds the Intent that starts the Activity to the top of the stack
-            PendingIntent resultPendingIntent = PendingIntent.GetActivity(context, 0, resultIntent, 0);
+            PendingIntent resultPendingIntent = PendingIntent.GetActivity(context, 0, resultIntent, PendingIntentFlags.UpdateCurrent);
             mBuilder.SetContentIntent(resultPendingIntent);
             // mId allows you to update the notification later on.
             int id = 0;
