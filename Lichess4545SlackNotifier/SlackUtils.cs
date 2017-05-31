@@ -23,6 +23,12 @@ namespace Lichess4545SlackNotifier
             string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
             return await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
         }
+        
+        public static async Task<AuthResponse> TestAuth(string token)
+        {
+            string url = $"https://slack.com/api/auth.test?token={token}";
+            return await JsonReader.ReadJsonFromUrlAsync<AuthResponse>(url);
+        }
 
         public static async Task<ChannelHistoryResponse> ChannelHistory(string token, Channel channel)
         {
@@ -34,7 +40,7 @@ namespace Lichess4545SlackNotifier
             return await JsonReader.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
         }
 
-        public static async Task<IEnumerable<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
+        public static async Task<List<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
         {
             var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0).ToList();
             var result = new List<UnreadChannel>();
@@ -66,7 +72,7 @@ namespace Lichess4545SlackNotifier
                 }
             }
 
-            return result.OrderByDescending(x => x.LatestTimestamp);
+            return result.OrderByDescending(x => x.LatestTimestamp).ToList();
         }
 
         private static async Task<List<Message>> MessageHistory(this Channel channel, string token)

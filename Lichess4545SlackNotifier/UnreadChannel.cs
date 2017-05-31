@@ -19,7 +19,7 @@ namespace Lichess4545SlackNotifier
         public string ChannelName { get; set; }
 
         public List<SlackApi.Message> Messages { get; set; }
-
+        
         public long LatestTimestamp => Messages.First().LongTimestamp();
     }
 }

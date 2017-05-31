@@ -47,6 +47,8 @@ namespace Lichess4545SlackNotifier
             mBuilder.SetDeleteIntent(PendingIntent.GetBroadcast(context.ApplicationContext, 0, intent, PendingIntentFlags.UpdateCurrent));
 
             Intent resultIntent = new Intent(context, typeof(MainActivity));
+            resultIntent.AddFlags(ActivityFlags.SingleTop);
+            resultIntent.PutExtra("ts", ts);
 
             // The stack builder object will contain an artificial back stack for the
             // started Activity.

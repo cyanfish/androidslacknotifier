@@ -53,5 +53,17 @@ namespace Lichess4545SlackNotifier
             get => Source.GetStringSet("Subscriptions", SubscriptionType.All.Select(x => x.Id).ToList()).Select(SubscriptionType.FromId);
             set => Source.Edit().PutStringSet("Subscriptions", value.Select(x => x.Id).ToList()).Commit();
         }
+
+        public List<UnreadChannel> LatestUnreads
+        {
+            get => JsonConvert.DeserializeObject<List<UnreadChannel>>(Source.GetString("LatestUnreads", "[]")) ?? new List<UnreadChannel>();
+            set => Source.Edit().PutString("LatestUnreads", JsonConvert.SerializeObject(value)).Commit();
+        }
+
+        public Dictionary<string, string> LatestUserMap
+        {
+            get => JsonConvert.DeserializeObject<Dictionary<string, string>>(Source.GetString("LatestUserMap", "{}")) ?? new Dictionary<string, string>();
+            set => Source.Edit().PutString("LatestUserMap", JsonConvert.SerializeObject(value)).Commit();
+        }
     }
 }

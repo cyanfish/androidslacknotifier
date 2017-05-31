@@ -8,9 +8,8 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Util;
-using Lichess4545SlackNotifier.SlackApi;
 using Newtonsoft.Json;
-using Org.Json;
+using Exception = Java.Lang.Exception;
 
 namespace Lichess4545SlackNotifier
 {
@@ -25,26 +24,22 @@ namespace Lichess4545SlackNotifier
 
         private async void Poll(Context context)
         {
-            // unread_count_display
-
             try
             {
                 var prefs = new Prefs(context);
                 string token = prefs.Token;
 
                 var userMap = await SlackUtils.BuildUserMap(token);
-                
+                prefs.LatestUserMap = userMap;
+
                 var response = await SlackUtils.RtmStart(token);
 
                 var unreads = await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions);
-                
+                prefs.LatestUnreads = unreads;
+
                 Notifications.Update(userMap, context, unreads, prefs.LastDismissedTs);
             }
-            catch (IOException e)
-            {
-                Log.Error("slackn", e.ToString());
-            }
-            catch (JsonSerializationException e)
+            catch (Exception e)
             {
                 Log.Error("slackn", e.ToString());
             }
