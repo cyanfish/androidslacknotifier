@@ -18,8 +18,6 @@ namespace Lichess4545SlackNotifier
 {
     public class CloudMessaging
     {
-        private const string SERVER_URL_FORMAT = "https://staging.lichess4545.com/app/{0}/";
-
         private readonly Prefs prefs;
 
         public CloudMessaging(Context context)
@@ -31,7 +29,7 @@ namespace Lichess4545SlackNotifier
         {
             try
             {
-                var url = string.Format(SERVER_URL_FORMAT, "register");
+                var url = string.Format(Constants.ServerUrlFormat, "register");
                 if (prefs.Token != null)
                 {
                     var args = new { slack_token = prefs.Token, reg_id = FirebaseInstanceId.Instance.Token };
@@ -53,7 +51,7 @@ namespace Lichess4545SlackNotifier
         {
             try
             {
-                var url = string.Format(SERVER_URL_FORMAT, "unregister");
+                var url = string.Format(Constants.ServerUrlFormat, "unregister");
                 var args = new { reg_id = FirebaseInstanceId.Instance.Token };
                 string response = await JsonUtils.WriteJsonToUrlAsync(url, args);
                 Log.Debug("slackn", response);

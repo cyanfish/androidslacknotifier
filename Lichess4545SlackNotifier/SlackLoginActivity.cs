@@ -12,6 +12,7 @@ using Java.Security;
 using Lichess4545SlackNotifier.SlackApi;
 using Exception = Java.Lang.Exception;
 using Uri = Android.Net.Uri;
+#pragma warning disable 649
 
 namespace Lichess4545SlackNotifier
 {
