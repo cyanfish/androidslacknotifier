@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "725055757733",
+    "firebase_url": "https://lichess4545-fcm.firebaseio.com",
+    "project_id": "lichess4545-fcm",
+    "storage_bucket": "lichess4545-fcm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725055757733:android:f2c31ed90c0b9b74",
+        "android_client_info": {
+          "package_name": "com.lichess4545.slacknotifier"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "725055757733-88r8ctnel2lhgt6haujpodhi47rclmvp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASkx--vrvmEt4zvqnBmWcoq9lmqvNj-Rs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -29,6 +29,7 @@ namespace Lichess4545SlackNotifier
             var Prefs = new Prefs(this);
             Prefs.Token = Creds.TestToken;
             Prefs.Auth = new AuthResponse { Ok = true, User = Creds.TestUser };
+            SetResult(Result.Ok);
             Finish();
             return;
 #endif
@@ -101,7 +102,7 @@ namespace Lichess4545SlackNotifier
                 {
                     string url =
                         $"https://slack.com/api/oauth.access?client_id={Creds.ClientId}&client_secret={Creds.ClientSecret}&code={code}&redirect_uri={Constants.RedirectUri}";
-                    var tokenResponse = await JsonReader.ReadJsonFromUrlAsync<TokenResponse>(url);
+                    var tokenResponse = await JsonUtils.ReadJsonFromUrlAsync<TokenResponse>(url);
                     Prefs.Token = tokenResponse.AccessToken;
                     
                     Prefs.Auth = await SlackUtils.TestAuth(Prefs.Token);

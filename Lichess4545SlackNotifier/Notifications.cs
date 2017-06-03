@@ -14,6 +14,22 @@ namespace Lichess4545SlackNotifier
 {
     public class Notifications
     {
+        public static async void Update(Context context)
+        {
+            var prefs = new Prefs(context);
+            string token = prefs.Token;
+
+            var userMap = await SlackUtils.BuildUserMap(token);
+            prefs.LatestUserMap = userMap;
+
+            var response = await SlackUtils.RtmStart(token);
+
+            var unreads = await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions);
+            prefs.LatestUnreads = unreads;
+
+            Update(userMap, context, unreads, prefs.LastDismissedTs);
+        }
+
         public static void Update(Dictionary<string, string> userMap, Context context, IEnumerable<UnreadChannel> unreadChannels, long lastDismissedTs)
         {
             var channels = unreadChannels.Where(x => x.LatestTimestamp > lastDismissedTs).ToList();

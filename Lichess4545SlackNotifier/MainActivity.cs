@@ -2,6 +2,7 @@
 using System.Linq;
 using Android.App;
 using Android.Content;
+using Android.Gms.Common;
 using Android.Graphics;
 using Android.Widget;
 using Android.OS;
@@ -42,6 +43,7 @@ namespace Lichess4545SlackNotifier
         
         private Prefs prefs;
         private AlarmSetter alarmSetter;
+        private CloudMessaging cloudMessaging;
         private MessageListAdapter adapter;
 
         protected override void OnCreate(Bundle bundle)
@@ -53,6 +55,7 @@ namespace Lichess4545SlackNotifier
 
             prefs = new Prefs(this);
             alarmSetter = new AlarmSetter(this);
+            cloudMessaging = new CloudMessaging(this);
 
             if (Intent.HasExtra("ts"))
             {
@@ -66,6 +69,7 @@ namespace Lichess4545SlackNotifier
 
             logoutButton.Click += (sender, args) =>
             {
+                cloudMessaging.Unregister();
                 prefs.Auth = null;
                 prefs.LatestUnreads = null;
                 prefs.LatestUserMap = null;
@@ -89,6 +93,20 @@ namespace Lichess4545SlackNotifier
 
             messageList.ItemClick += (sender, args) => StartActivity(((MessageListAdapter)messageList.Adapter).UnreadChannels[args.Position].GetIntent());
             messageList.Adapter = adapter = new MessageListAdapter(this, prefs.LatestUnreads, prefs.LatestUserMap);
+
+            IsPlayServicesAvailable();
+        }
+
+        public bool IsPlayServicesAvailable()
+        {
+            int resultCode = GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(this);
+            if (resultCode != ConnectionResult.Success)
+            {
+                if (GoogleApiAvailability.Instance.IsUserResolvableError(resultCode))
+                    Toast.MakeText(this, GoogleApiAvailability.Instance.GetErrorString(resultCode), ToastLength.Long).Show();
+                return false;
+            }
+            return true;
         }
 
         protected override void OnNewIntent(Intent intent)
@@ -154,6 +172,7 @@ namespace Lichess4545SlackNotifier
                 {
                     RefreshDisplay(true);
                     alarmSetter.SetAlarm();
+                    cloudMessaging.Register();
                 }
             }
         }

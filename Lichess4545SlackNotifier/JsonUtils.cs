@@ -15,13 +15,21 @@ using Org.Json;
 
 namespace Lichess4545SlackNotifier
 {
-    public class JsonReader
+    public class JsonUtils
     {
         public static async Task<T> ReadJsonFromUrlAsync<T>(string url)
         {
             using (var client = new WebClient())
             {
                 return JsonConvert.DeserializeObject<T>(await client.DownloadStringTaskAsync(url));
+            }
+        }
+
+        public static async Task<string> WriteJsonToUrlAsync(string url, object data)
+        {
+            using (var client = new WebClient())
+            {
+                return await client.UploadStringTaskAsync(url, "POST", JsonConvert.SerializeObject(data));
             }
         }
     }

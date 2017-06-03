@@ -38,6 +38,7 @@ namespace Lichess4545SlackNotifier
             .SetPositiveButton(Android.Resource.String.Ok, (sender, args) =>
                 {
                     prefs.Subscriptions = selectedItems;
+                    new CloudMessaging(Context).UpdateTopicSubscriptions();
                     ((MainActivity) Activity).PollForMessages();
                 })
             .SetNegativeButton(Android.Resource.String.Cancel, (sender, args) => { });

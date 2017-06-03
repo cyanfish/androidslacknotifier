@@ -14,20 +14,20 @@ namespace Lichess4545SlackNotifier
         public static async Task<Dictionary<string, string>> BuildUserMap(string token)
         {
             string url = $"https://slack.com/api/users.list?token={token}";
-            var response = await JsonReader.ReadJsonFromUrlAsync<UserListResponse>(url);
+            var response = await JsonUtils.ReadJsonFromUrlAsync<UserListResponse>(url);
             return response.Members.ToDictionary(member => member.Id, member => member.Name);
         }
 
         public static async Task<RtmStartResponse> RtmStart(string token)
         {
             string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
-            return await JsonReader.ReadJsonFromUrlAsync<RtmStartResponse>(url);
+            return await JsonUtils.ReadJsonFromUrlAsync<RtmStartResponse>(url);
         }
         
         public static async Task<AuthResponse> TestAuth(string token)
         {
             string url = $"https://slack.com/api/auth.test?token={token}";
-            return await JsonReader.ReadJsonFromUrlAsync<AuthResponse>(url);
+            return await JsonUtils.ReadJsonFromUrlAsync<AuthResponse>(url);
         }
 
         public static async Task<ChannelHistoryResponse> ChannelHistory(string token, Channel channel)
@@ -37,7 +37,7 @@ namespace Lichess4545SlackNotifier
                        channel.IsGroup ? "groups" :
                        "channels";
             string url = $"https://slack.com/api/{type}.history?token={token}&channel={channel.Id}&unreads=true";
-            return await JsonReader.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
+            return await JsonUtils.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
         }
 
         public static async Task<List<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
