@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Net;
 using Android.Widget;
 using Android.OS;
 using Android.Webkit;
+using Com.Lilarcor.Cheeseknife;
 using Java.Math;
 using Java.Security;
 using Lichess4545SlackNotifier.SlackApi;
@@ -18,13 +20,17 @@ namespace Lichess4545SlackNotifier
     {
         private readonly SecureRandom random = new SecureRandom();
 
+        [InjectView(Resource.Id.login_webview)]
+        private WebView webView;
+
         private string state;
+        private bool doneFirst;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
 
-#if DEBUG
+#if DEBUG && false
             // Log in automatically with test credentials
             var Prefs = new Prefs(this);
             Prefs.Token = Creds.TestToken;
@@ -35,14 +41,20 @@ namespace Lichess4545SlackNotifier
 #endif
 
             SetContentView(Resource.Layout.SlackLogin);
+            Cheeseknife.Inject(this);
 
             state = new BigInteger(130, random).ToString(32);
-
-            WebView webView = FindViewById<WebView>(Resource.Id.login_webview);
+            
             webView.Settings.JavaScriptEnabled = true;
             webView.SetWebViewClient(new Client(this, state));
 
-            string url = $"https://slack.com/oauth/authorize?client_id={Creds.ClientId}&scope={Constants.Scope}&redirect_uri={Constants.RedirectUri}&state={state}&team={Constants.Team}";
+            LoadAuthUrl(Constants.Scope1);
+        }
+
+        private void LoadAuthUrl(string scope)
+        {
+            string url =
+                $"https://slack.com/oauth/authorize?client_id={Creds.ClientId}&scope={scope}&redirect_uri={Constants.RedirectUri}&state={state}&team={Constants.Team}";
             webView.LoadUrl(url);
         }
 
@@ -50,20 +62,22 @@ namespace Lichess4545SlackNotifier
         {
             base.OnSaveInstanceState(outState);
             outState.PutString("state", state);
+            outState.PutBoolean("doneFirst", doneFirst);
         }
 
         protected override void OnRestoreInstanceState(Bundle savedInstanceState)
         {
             base.OnRestoreInstanceState(savedInstanceState);
             state = savedInstanceState.GetString("state");
+            doneFirst = savedInstanceState.GetBoolean("doneFirst");
         }
 
         private class Client : WebViewClient
         {
-            private readonly Activity context;
+            private readonly SlackLoginActivity context;
             private readonly string state;
 
-            public Client(Activity context, string state)
+            public Client(SlackLoginActivity context, string state)
             {
                 this.context = context;
                 this.state = state;
@@ -85,6 +99,19 @@ namespace Lichess4545SlackNotifier
                         string returnedState = uri.GetQueryParameter("state");
                         if (state.Equals(returnedState))
                         {
+                            if (!context.doneFirst)
+                            {
+                                context.doneFirst = true;
+                                ReadToken(code).ContinueWith(t =>
+                                {
+                                    new Handler(Looper.MainLooper).Post(() =>
+                                    {
+                                        context.LoadAuthUrl(Constants.Scope2);
+                                        Toast.MakeText(context, "One more time", ToastLength.Short).Show();
+                                    });
+                                });
+                                return true;
+                            }
                             GetAccessToken(code);
                             return true;
                         }
@@ -100,11 +127,9 @@ namespace Lichess4545SlackNotifier
             {
                 try
                 {
-                    string url =
-                        $"https://slack.com/api/oauth.access?client_id={Creds.ClientId}&client_secret={Creds.ClientSecret}&code={code}&redirect_uri={Constants.RedirectUri}";
-                    var tokenResponse = await JsonUtils.ReadJsonFromUrlAsync<TokenResponse>(url);
+                    var tokenResponse = await ReadToken(code);
                     Prefs.Token = tokenResponse.AccessToken;
-                    
+
                     Prefs.Auth = await SlackUtils.TestAuth(Prefs.Token);
 
                     Toast.MakeText(context, "Login succeeded", ToastLength.Short).Show();
@@ -116,6 +141,14 @@ namespace Lichess4545SlackNotifier
                     context.SetResult(Result.Ok);
                 }
                 context.Finish();
+            }
+
+            private static async Task<TokenResponse> ReadToken(string code)
+            {
+                string url =
+                    $"https://slack.com/api/oauth.access?client_id={Creds.ClientId}&client_secret={Creds.ClientSecret}&code={code}&redirect_uri={Constants.RedirectUri}";
+                var tokenResponse = await JsonUtils.ReadJsonFromUrlAsync<TokenResponse>(url);
+                return tokenResponse;
             }
         }
     }

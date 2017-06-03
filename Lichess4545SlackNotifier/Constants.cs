@@ -14,9 +14,9 @@ namespace Lichess4545SlackNotifier
 {
     public class Constants
     {
-        // TODO: If we switch to the events API and a push messaging server, change scopes to these:
-        // channels:read channels:history groups:read groups:history im:read im:history mpim:read mpim:history
-        public const string Scope = "client";
+        // Slack doesn't allow these scopes to be combined so they have to be requested separately
+        public const string Scope1 = "client";
+        public const string Scope2 = "channels:read channels:history groups:read groups:history im:read im:history mpim:read mpim:history";
 
         public const string RedirectUri = "https://lichess4545.com/redirect";
 

@@ -19,15 +19,23 @@ namespace Lichess4545SlackNotifier
             var prefs = new Prefs(context);
             string token = prefs.Token;
 
-            var userMap = await SlackUtils.BuildUserMap(token);
-            prefs.LatestUserMap = userMap;
+            var readAuth = SlackUtils.TestAuth(token);
+            var readRtm = SlackUtils.RtmStart(token);
+            var readUserMap = SlackUtils.BuildUserMap(token);
 
-            var response = await SlackUtils.RtmStart(token);
+            prefs.Auth = await readAuth;
+            if (prefs.Auth.Ok)
+            {
+                var userMap = await readUserMap;
+                prefs.LatestUserMap = userMap;
 
-            var unreads = await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions);
-            prefs.LatestUnreads = unreads;
+                var response = await readRtm;
 
-            Update(userMap, context, unreads, prefs.LastDismissedTs);
+                var unreads = await SlackUtils.GetUnreadChannels(response, token, userMap, prefs.Auth.User, prefs.Subscriptions);
+                prefs.LatestUnreads = unreads;
+
+                Update(userMap, context, unreads, prefs.LastDismissedTs);
+            }
         }
 
         public static void Update(Dictionary<string, string> userMap, Context context, IEnumerable<UnreadChannel> unreadChannels, long lastDismissedTs)
