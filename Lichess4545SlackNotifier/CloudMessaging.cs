@@ -43,6 +43,10 @@ namespace Lichess4545SlackNotifier
             {
                 Log.Error("slackn", e, "Error registering");
             }
+            catch (System.Exception e)
+            {
+                Log.Error("slackn", "Error registering: " + e);
+            }
         }
 
         public async void Unregister()
@@ -57,6 +61,10 @@ namespace Lichess4545SlackNotifier
             catch (Exception e)
             {
                 Log.Error("slackn", e, "Error unregistering");
+            }
+            catch (System.Exception e)
+            {
+                Log.Error("slackn", "Error unregistering: " + e);
             }
         }
 

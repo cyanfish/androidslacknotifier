@@ -135,7 +135,12 @@ namespace Lichess4545SlackNotifier
                     Toast.MakeText(context, "Login succeeded", ToastLength.Short).Show();
                     context.SetResult(Result.Ok);
                 }
-                catch (Exception)
+                catch (Exception e)
+                {
+                    Toast.MakeText(context, "Login failed", ToastLength.Short).Show();
+                    context.SetResult(Result.Ok);
+                }
+                catch (System.Exception e)
                 {
                     Toast.MakeText(context, "Login failed", ToastLength.Short).Show();
                     context.SetResult(Result.Ok);

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Gms.Common;
@@ -69,6 +71,9 @@ namespace Lichess4545SlackNotifier
 
             logoutButton.Click += (sender, args) =>
             {
+                //TestStuff();
+                //return;
+
                 cloudMessaging.Unregister();
                 prefs.Auth = null;
                 prefs.LatestUnreads = null;
@@ -95,6 +100,32 @@ namespace Lichess4545SlackNotifier
             messageList.Adapter = adapter = new MessageListAdapter(this, prefs.LatestUnreads, prefs.LatestUserMap);
 
             IsPlayServicesAvailable();
+        }
+
+        private void TestStuff()
+        {
+            DoSomethingAsync();
+        }
+
+        private async void DoSomethingAsync()
+        {
+            try
+            {
+                await InBackground();
+            }
+            catch (System.Exception e)
+            {
+                Log.Error("slackn", "THIS IS A CAUGHT ERROR " + e);
+            }
+        }
+
+        private Task InBackground()
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(1000);
+                throw new IOException("IO problems?");
+            });
         }
 
         public bool IsPlayServicesAvailable()
@@ -160,7 +191,11 @@ namespace Lichess4545SlackNotifier
             }
             catch (Exception e)
             {
-                Log.Error("slackn", e.ToString());
+                Log.Error("slackn", e, "Error polling");
+            }
+            catch (System.Exception e)
+            {
+                Log.Error("slackn", "Error polling: " + e);
             }
         }
 
@@ -213,6 +248,7 @@ namespace Lichess4545SlackNotifier
                 status.Visibility = ViewStates.Visible;
                 pollContainer.Visibility = ViewStates.Gone;
                 progressBar.Visibility = ViewStates.Gone;
+                messageList.Visibility = ViewStates.Gone;
                 status.Text = "Couldn't connect to slack";
                 return;
             }
@@ -226,6 +262,7 @@ namespace Lichess4545SlackNotifier
                 status.Visibility = ViewStates.Visible;
                 pollContainer.Visibility = ViewStates.Visible;
                 progressBar.Visibility = messageList.Adapter?.Count > 0 ? ViewStates.Gone : ViewStates.Visible;
+                messageList.Visibility = ViewStates.Visible;
                 status.Text = $"Logged in as {user}";
             }
             else
@@ -236,6 +273,7 @@ namespace Lichess4545SlackNotifier
                 status.Visibility = ViewStates.Gone;
                 pollContainer.Visibility = ViewStates.Gone;
                 progressBar.Visibility = ViewStates.Gone;
+                messageList.Visibility = ViewStates.Gone;
             }
         }
 

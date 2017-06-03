@@ -30,7 +30,11 @@ namespace Lichess4545SlackNotifier
             }
             catch (Exception e)
             {
-                Log.Error("slackn", e.ToString());
+                Log.Error("slackn", e, "Error updating notifications");
+            }
+            catch (System.Exception e)
+            {
+                Log.Error("slackn", "Error updating notifications: " + e);
             }
         }
     }
