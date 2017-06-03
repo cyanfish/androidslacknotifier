@@ -71,9 +71,6 @@ namespace Lichess4545SlackNotifier
 
             logoutButton.Click += (sender, args) =>
             {
-                //TestStuff();
-                //return;
-
                 cloudMessaging.Unregister();
                 prefs.Auth = null;
                 prefs.LatestUnreads = null;
@@ -101,33 +98,7 @@ namespace Lichess4545SlackNotifier
 
             IsPlayServicesAvailable();
         }
-
-        private void TestStuff()
-        {
-            DoSomethingAsync();
-        }
-
-        private async void DoSomethingAsync()
-        {
-            try
-            {
-                await InBackground();
-            }
-            catch (System.Exception e)
-            {
-                Log.Error("slackn", "THIS IS A CAUGHT ERROR " + e);
-            }
-        }
-
-        private Task InBackground()
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                Thread.Sleep(1000);
-                throw new IOException("IO problems?");
-            });
-        }
-
+        
         public bool IsPlayServicesAvailable()
         {
             int resultCode = GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(this);
