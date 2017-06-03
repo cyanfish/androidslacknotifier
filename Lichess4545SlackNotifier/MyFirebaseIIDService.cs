@@ -17,7 +17,9 @@ namespace Lichess4545SlackNotifier
         {
             var refreshedToken = FirebaseInstanceId.Instance.Token;
             Log.Debug(TAG, "Refreshed token: " + refreshedToken);
-            new CloudMessaging(ApplicationContext).Register();
+            var cloudMessaging = new CloudMessaging(ApplicationContext);
+            cloudMessaging.Register();
+            cloudMessaging.UpdateTopicSubscriptions();
         }
     }
 }

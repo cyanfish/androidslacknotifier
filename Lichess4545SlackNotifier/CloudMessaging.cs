@@ -68,13 +68,13 @@ namespace Lichess4545SlackNotifier
 
         public void UpdateTopicSubscriptions()
         {
-            foreach (var sub in prefs.Subscriptions)
+            foreach (var sub in prefs.Subscriptions.Intersect(SubscriptionType.AllAnnounce))
             {
-                FirebaseMessaging.Instance.SubscribeToTopic(sub.Tag);
+                FirebaseMessaging.Instance.SubscribeToTopic(sub.Id);
             }
-            foreach (var sub in SubscriptionType.All.Except(prefs.Subscriptions))
+            foreach (var sub in SubscriptionType.AllAnnounce.Except(prefs.Subscriptions))
             {
-                FirebaseMessaging.Instance.UnsubscribeFromTopic(sub.Tag);
+                FirebaseMessaging.Instance.UnsubscribeFromTopic(sub.Id);
             }
         }
     }

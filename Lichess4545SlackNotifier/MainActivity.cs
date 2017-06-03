@@ -69,14 +69,7 @@ namespace Lichess4545SlackNotifier
                 StartActivityForResult(new Intent(this, typeof(SlackLoginActivity)), LOGIN_REQUEST);
             };
 
-            logoutButton.Click += (sender, args) =>
-            {
-                cloudMessaging.Unregister();
-                prefs.Auth = null;
-                prefs.LatestUnreads = null;
-                prefs.LatestUserMap = null;
-                RefreshDisplay(true);
-            };
+            logoutButton.Click += (sender, args) => { DoLogout(); };
 
             string[] intervalChoices = { "Disabled", "Every 10 minutes", "Every 20 minutes", "Every 30 minutes", "Every hour", "Every 2 hours" };
             var intervalValues = new List<long> { 0L, 10 * TimeConstants.Minute, 20 * TimeConstants.Minute, 30 * TimeConstants.Minute, TimeConstants.Hour, 2 * TimeConstants.Hour };
@@ -98,7 +91,16 @@ namespace Lichess4545SlackNotifier
 
             IsPlayServicesAvailable();
         }
-        
+
+        private void DoLogout()
+        {
+            cloudMessaging.Unregister();
+            prefs.Auth = null;
+            prefs.LatestUnreads = null;
+            prefs.LatestUserMap = null;
+            RefreshDisplay(true);
+        }
+
         public bool IsPlayServicesAvailable()
         {
             int resultCode = GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(this);
@@ -138,6 +140,7 @@ namespace Lichess4545SlackNotifier
             string token = prefs.Token;
             if (token == null)
             {
+                progressBar.Visibility = ViewStates.Gone;
                 return;
             }
             try
@@ -158,6 +161,11 @@ namespace Lichess4545SlackNotifier
                     adapter.NotifyDataSetChanged();
                     progressBar.Visibility = ViewStates.Gone;
                     Notifications.Update(userMap, this, unreadChannels, prefs.LastDismissedTs);
+                }
+                else
+                {
+                    progressBar.Visibility = ViewStates.Gone;
+                    DoLogout();
                 }
             }
             catch (Exception e)
