@@ -20,7 +20,7 @@ namespace Lichess4545SlackNotifier
 
         public const string RedirectUri = "https://lichess4545.com/redirect";
 
-        public const string ServerUrlFormat = "https://staging.lichess4545.com/app/{0}/";
+        public const string ServerUrlFormat = "https://www.lichess4545.com/app/{0}/";
 
         public const string Team = "T0CSGMP0R";
 
