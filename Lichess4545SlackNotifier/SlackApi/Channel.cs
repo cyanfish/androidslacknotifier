@@ -24,11 +24,17 @@ namespace Lichess4545SlackNotifier.SlackApi
         [JsonProperty(PropertyName = "unread_count_display")]
         public int UnreadCountDisplay { get; set; }
 
+        [JsonProperty(PropertyName = "dm_count")]
+        public int DmCount { get; set; }
+
         public string Id { get; set; }
 
         public Message Latest { get; set; }
 
         public string User { get; set; }
+
+        [JsonProperty(PropertyName = "user_id")]
+        public string UserId { get; set; }
 
         public List<string> Members { get; set; }
 

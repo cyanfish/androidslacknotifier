@@ -20,7 +20,7 @@ namespace Lichess4545SlackNotifier
             string token = prefs.Token;
 
             var readAuth = SlackUtils.TestAuth(token);
-            var readRtm = SlackUtils.RtmStart(token);
+            var readRtm = SlackUtils.UsersCounts(token);
             var readUserMap = SlackUtils.BuildUserMap(token);
 
             prefs.Auth = await readAuth;

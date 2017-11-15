@@ -107,6 +107,7 @@
     <Compile Include="AlarmSetter.cs" />
     <Compile Include="AlarmReceiver.cs" />
     <Compile Include="CloudMessaging.cs" />
+    <Compile Include="MyApp.cs" />
     <Compile Include="MyFirebaseIIDService.cs" />
     <Compile Include="MyFirebaseMessagingService.cs" />
     <Compile Include="Notifications.cs" />
@@ -121,7 +122,7 @@
     <Compile Include="JsonUtils.cs" />
     <Compile Include="Prefs.cs" />
     <Compile Include="SlackApi\Message.cs" />
-    <Compile Include="SlackApi\RtmStartResponse.cs" />
+    <Compile Include="SlackApi\UsersCountsResponse.cs" />
     <Compile Include="SlackApi\AuthResponse.cs" />
     <Compile Include="SlackApi\User.cs" />
     <Compile Include="SlackApi\UserListResponse.cs" />

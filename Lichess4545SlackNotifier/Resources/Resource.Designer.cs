@@ -348,11 +348,11 @@ namespace Lichess4545SlackNotifier
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f050019
-			public const int ApplicationName = 2131034137;
+			// aapt resource value: 0x7f050012
+			public const int ApplicationName = 2131034130;
 			
-			// aapt resource value: 0x7f050018
-			public const int Hello = 2131034136;
+			// aapt resource value: 0x7f050011
+			public const int Hello = 2131034129;
 			
 			// aapt resource value: 0x7f050000
 			public const int common_google_play_services_enable_button = 2131034112;
@@ -404,27 +404,6 @@ namespace Lichess4545SlackNotifier
 			
 			// aapt resource value: 0x7f05000f
 			public const int common_signin_button_text_long = 2131034127;
-			
-			// aapt resource value: 0x7f050013
-			public const int default_web_client_id = 2131034131;
-			
-			// aapt resource value: 0x7f050014
-			public const int firebase_database_url = 2131034132;
-			
-			// aapt resource value: 0x7f050011
-			public const int gcm_defaultSenderId = 2131034129;
-			
-			// aapt resource value: 0x7f050015
-			public const int google_api_key = 2131034133;
-			
-			// aapt resource value: 0x7f050012
-			public const int google_app_id = 2131034130;
-			
-			// aapt resource value: 0x7f050016
-			public const int google_crash_reporting_api_key = 2131034134;
-			
-			// aapt resource value: 0x7f050017
-			public const int google_storage_bucket = 2131034135;
 			
 			static String()
 			{

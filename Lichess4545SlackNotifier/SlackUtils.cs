@@ -18,10 +18,10 @@ namespace Lichess4545SlackNotifier
             return response.Members?.ToDictionary(member => member.Id, member => member.Name);
         }
 
-        public static async Task<RtmStartResponse> RtmStart(string token)
+        public static async Task<UsersCountsResponse> UsersCounts(string token)
         {
-            string url = $"https://slack.com/api/rtm.start?token={token}&mpim_aware=true";
-            return await JsonUtils.ReadJsonFromUrlAsync<RtmStartResponse>(url);
+            string url = $"https://slack.com/api/users.counts?token={token}&mpim_aware=true";
+            return await JsonUtils.ReadJsonFromUrlAsync<UsersCountsResponse>(url);
         }
         
         public static async Task<AuthResponse> TestAuth(string token)
@@ -40,9 +40,9 @@ namespace Lichess4545SlackNotifier
             return await JsonUtils.ReadJsonFromUrlAsync<ChannelHistoryResponse>(url);
         }
 
-        public static async Task<List<UnreadChannel>> GetUnreadChannels(RtmStartResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
+        public static async Task<List<UnreadChannel>> GetUnreadChannels(UsersCountsResponse response, string token, Dictionary<string, string> userMap, string currentUser, IEnumerable<SubscriptionType> subs)
         {
-            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && x.UnreadCountDisplay > 0).ToList();
+            var channelsWithUnreads = response.AllChannels().Where(x => !x.IsArchived && (x.UnreadCountDisplay > 0 || x.DmCount > 0)).ToList();
             var result = new List<UnreadChannel>();
             if (subs.Contains(SubscriptionType.DirectMessages))
             {
@@ -77,16 +77,14 @@ namespace Lichess4545SlackNotifier
 
         private static async Task<List<Message>> MessageHistory(this Channel channel, string token)
         {
-            return channel.UnreadCountDisplay > 1
-                ? (await ChannelHistory(token, channel)).Messages.Take(channel.UnreadCountDisplay).ToList()
-                : new List<Message> { channel.Latest };
+            return (await ChannelHistory(token, channel)).Messages.Take(channel.UnreadCountDisplay + channel.DmCount).ToList();
         }
 
         public static string GetDisplayName(this Channel channel, Dictionary<string, string> userMap, string currentUserName)
         {
             if (channel.IsIm)
             {
-                string userId = channel.User;
+                string userId = channel.User ?? channel.UserId;
                 return userMap.TryGetValue(userId, out string userName) ? userName : userId;
             }
             if (channel.IsMpim)
@@ -107,8 +105,12 @@ namespace Lichess4545SlackNotifier
             return "";
         }
 
-        public static IEnumerable<Channel> AllChannels(this RtmStartResponse r)
+        public static IEnumerable<Channel> AllChannels(this UsersCountsResponse r)
         {
+            foreach (var im in r.Ims)
+            {
+                im.IsIm = true;
+            }
             return r.Mpims.Concat(r.Ims).Concat(r.Channels).Concat(r.Groups);
         }
 

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Lichess4545SlackNotifier.SlackApi
 {
-    public class RtmStartResponse
+    public class UsersCountsResponse
     {
         public List<Channel> Mpims { get; set; }
         public List<Channel> Ims { get; set; }
