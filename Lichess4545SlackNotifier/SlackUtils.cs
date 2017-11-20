@@ -15,7 +15,8 @@ namespace Lichess4545SlackNotifier
         {
             string url = $"https://slack.com/api/users.list?token={token}";
             var response = await JsonUtils.ReadJsonFromUrlAsync<UserListResponse>(url);
-            return response.Members?.ToDictionary(member => member.Id, member => member.Name);
+            return response.Members?.Where(member => member.Profile?.DisplayName != null)
+                                    .ToDictionary(member => member.Id, member => member.Profile?.DisplayName);
         }
 
         public static async Task<UsersCountsResponse> UsersCounts(string token)
